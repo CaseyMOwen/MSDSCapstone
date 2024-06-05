@@ -1,6 +1,9 @@
 # MSDSCapstone
 Capstone Project for Tufts University's Master's in Data Science (MSDS)
 
+Contents
+- [Week 1 05/29-06/05](#week-1)
+
 ### Week 1
 05/29 - 06/05
 
