@@ -1,8 +1,10 @@
 # MSDSCapstone
 Capstone Project for Tufts University's Master's in Data Science (MSDS)
 
-Contents
+## Contents
 - [Week 1 05/29-06/05](#week-1)
+
+## Status Reports
 
 ### Week 1
 05/29 - 06/05
@@ -42,3 +44,11 @@ Contents
 		- Disdvantages
 			- Uncertain if I will get the data I want
 			- Will want to brainstorm novel angles to take that haven't already been done
+- Fails of the week
+	- Did not settle on a specific idea yet
+- Successes of the week
+	- Came up with several ideas and compiled a lot of datasets
+- Difficulties of the week
+	- Coming up with a project idea that is the correct technical difficulty, related to my work experience, and answers an interesting question
+- Goals for next week:
+	- Meet with professor and settle on a specific idea
