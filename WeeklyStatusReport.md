@@ -1,5 +1,5 @@
-# MSDSCapstone
-Capstone Project for Tufts University's Master's in Data Science (MSDS)
+# Weekly Status Reports
+Weekly Status Reports for Casey Owen's Capstone Project for Tufts University's Master's in Data Science (MSDS)
 
 ## Contents
 - [Week 1 05/29-06/05](#week-1)
@@ -51,4 +51,4 @@ Capstone Project for Tufts University's Master's in Data Science (MSDS)
 - Difficulties of the week
 	- Coming up with a project idea that is the correct technical difficulty, related to my work experience, and answers an interesting question
 - Goals for next week:
-	- Meet with professor and settle on a specific idea
+	- Meet with professor and settle on a specific idea, then complete project proposal and requirements specification
