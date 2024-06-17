@@ -1,0 +1,7 @@
+pandas
+pyarrow
+polars
+scikit-learn
+xgboost
+matplotlib
+flask
