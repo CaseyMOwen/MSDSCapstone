@@ -15,8 +15,10 @@ RUN pip install gunicorn
 # Copy all directories to docker base image
 COPY . .
 
+ENV PORT 8080
 # Make port 8080 available to the worl outside container
-EXPOSE 8080
+# EXPOSE 8080
 
 # Start the app 
-CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
+CMD exec gunicorn --bind :$PORT app:app
+# CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
