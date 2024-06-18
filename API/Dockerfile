@@ -1,5 +1,5 @@
 # Python base image
-FROM python:3.9-slim
+FROM python:3.10-bookworm
 
 # The /app directory should act as the main application directory
 WORKDIR /app
@@ -7,6 +7,7 @@ WORKDIR /app
 
 
 # Python dependencies
+RUN pip install numpy==1.26.0
 RUN pip install xgboost
 RUN pip install pandas
 RUN pip install flask

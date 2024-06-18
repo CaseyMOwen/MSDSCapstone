@@ -31,10 +31,11 @@ def set_feature(var, val, input_df):
     return input_df
 
 def predict(input_df):
-    model = xgb.Booster()
-    model.load_model('appfiles/models/baseline_alabama.json')
+    booster = xgb.Booster()
+    # model = xgb.XGBRegressor()
+    booster.load_model('appfiles/models/baseline_alabama.json')
     dmatrix = xgb.DMatrix(input_df, enable_categorical=True)
-    return model.predict(dmatrix)
+    return booster.predict(dmatrix)
 
 
 
