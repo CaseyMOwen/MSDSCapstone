@@ -12,6 +12,7 @@ RUN pip install xgboost
 RUN pip install pandas
 RUN pip install flask
 RUN pip install gunicorn
+RUN pip install flask-cors
 
 # Copy all directories to docker base image
 COPY . .

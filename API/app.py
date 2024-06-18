@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
 import pandas as pd
 import xgboost as xgb
 import os
 
 app = Flask(__name__)
+CORS(app)
 
 def get_avg_home():
     with open('appfiles/avg_home.json') as f: 
