@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+        <title>Home Energy</title>
+        <link href="/home-energy/styles/styles.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
+    </head>
+
+    <body>
+        <div id="content">   
+        <h1>Home Energy Calculator</h1>
+        <div id="dropdownContainer">
+            <!-- Dropdown pairs will be appended here -->
+        </div>
+        
+        <button id="addDropdownButton">Add Feature</button>
+    <!-- </br>
+    </br> -->
+        <div id="featuredescription"></div>
+        
+        <script>
+            const dropdownContainer = document.getElementById('dropdownContainer');
+            const addDropdownButton = document.getElementById('addDropdownButton');
+            featuresDict = {}
+
+            function createDropdownPair() {
+                fetch('data_dictionary.json')
+                .then((response) => response.json())
+                .then((feat_json) => {
+                    
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'dropdown-pair';
+                    dropdownContainer.appendChild(wrapper)
+
+                    const featureSelect = document.createElement('select');
+                    featurevalueSelect = document.createElement('select');
+                    featurevalueInput = null
+                    const description = document.createElement('div')
+                    featureSelect.className = 'feature-select'
+                    featurevalueSelect.className = 'feature-value'
+                    description.className = 'feature-description'
+                    wrapper.appendChild(featureSelect)
+                    wrapper.appendChild(featurevalueSelect)
+                    wrapper.appendChild(description)
+
+                    featurevalueSelect.disabled = true;
+
+                    // Populate the country dropdown
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Select a feature';
+                    featureSelect.appendChild(defaultOption);
+
+                    for (const feature in feat_json) {
+                        const option = document.createElement('option');
+                        option.value = feature;
+                        option.textContent = feature;
+                        featureSelect.appendChild(option);
+                    }
+
+                    const defaultFeatureValueOption = document.createElement('option');
+                    defaultFeatureValueOption.value = '';
+                    defaultFeatureValueOption.textContent = 'Select a value';
+                    featurevalueSelect.appendChild(defaultFeatureValueOption);
+
+                    // Event listener for country dropdown
+                    featureSelect.addEventListener('change', function() {
+                        const selectedFeature = featureSelect.value;
+                        
+                        if (feat_json[selectedFeature]['data_type'] == 'string') {
+                            if (featurevalueInput != null) {
+                                featurevalueSelect = document.createElement('select');
+                                featurevalueInput.replaceWith(featurevalueSelect)
+                            }
+                            featurevalueSelect.innerHTML = '<option value="">Select a value</option>';
+                            if (selectedFeature) {
+                                featurevalueSelect.disabled = false;
+                                const featurevalues = feat_json[selectedFeature]['allowable_enumerations_baseline'];
+                                description.innerHTML = feat_json[selectedFeature]['field_description']
+                                for (const featurevalue of featurevalues) {
+                                    const option = document.createElement('option');
+                                    option.value = featurevalue;
+                                    option.textContent = featurevalue;
+                                    featurevalueSelect.appendChild(option);
+                                }
+                            // createDropdownPair();
+                            } else {
+                                featurevalueSelect.disabled = true;
+                            }
+                        } else {
+                            featurevalueInput = document.createElement('input');
+                            featurevalueInput.className = 'feature-value'
+                            featurevalueSelect.replaceWith(featurevalueInput)
+                            description.innerHTML = feat_json[selectedFeature]['field_description']
+                            // featurevalueSelect.innerHTML = '<input></input>';
+                        }
+                    });
+                })
+            }
+
+            // function addDropdownPair() {
+            //     createDropdownPair();
+            // }
+
+            // Initial dropdown pair
+            createDropdownPair();
+
+            // Add new dropdown pair when button is clicked
+            addDropdownButton.addEventListener('click', createDropdownPair);
+
+            function getFeatureDict() {
+                featDict = {}
+                for (let i = 0; i < dropdownContainer.children.length; i++) {
+                    const pair = dropdownContainer.children[i];
+                    const feature = pair.getElementsByClassName('feature-select')[0].value
+                    const featureValue = pair.getElementsByClassName('feature-value')[0].value
+                    if (featureValue != "") {
+                        featDict[feature] = featureValue
+                    }
+                }
+                console.log(featDict);
+                return featDict
+            }
+    
+        </script>        
+        
+        
+    </br></br>
+    <button id="postButton">Get Savings</button>
+        <script src="api.js"></script>
+    </br>
+        <div id="result"></div>
+
+    </div>
+
+    </body>
+
+
+    

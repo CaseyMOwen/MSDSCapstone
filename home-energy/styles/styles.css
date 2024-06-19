@@ -1,0 +1,17 @@
+.feature-description{
+    display: inline;
+    margin: 5px
+}
+
+.dropdown-pair select{
+    margin-right:10px;
+    margin-bottom: 20px
+}
+
+#content {
+    margin: 50px 0px 0px 150px
+}
+
+#result {
+    margin-top: 15px;
+}
