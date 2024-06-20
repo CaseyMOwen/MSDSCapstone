@@ -3,6 +3,8 @@ Weekly Status Reports for Casey Owen's Capstone Project for Tufts University's M
 
 ## Contents
 - [Week 1 05/29-06/05](#week-1)
+- [Week 2 06/05-06/12](#week-2)
+- [Week 3 06/12-06/19](#week-3)
 
 ## Status Reports
 
@@ -52,3 +54,43 @@ Weekly Status Reports for Casey Owen's Capstone Project for Tufts University's M
 	- Coming up with a project idea that is the correct technical difficulty, related to my work experience, and answers an interesting question
 - Goals for next week:
 	- Meet with professor and settle on a specific idea, then complete project proposal and requirements specification
+
+### Week 2
+06/05 - 06/12
+
+**Settled on idea, and flesh out details, submitting projects spec**
+- Met with professor on 6/7 to discuss idea 2, creating a website dashboard of "how much energy could my home save"
+- We talked about considering the impact of climate change on the outcome which I though was interesting
+- I created a plan to incorporate it - I found a dataset of fTMY data (future typical meteorological year) in the US and downloaded it
+	- Plan is to create aggregates of the weather as additional features in the dataset that I train the savings on
+	- That way the user can select a 20-year period they would like to evaluate on, and get both baseline energy use predictions and energy saving potential from various projects
+- I also completed and submitted the projects spec
+
+- Fails of the week
+	- Spent a large amount of time searching for fTMY data before I was able to find it
+- Successes of the week
+	- Submitted projects spec
+- Difficulties of the week
+	- Settling on appropriate project idea at beginning of week
+- Goals for next week:
+	- Complete proof of concept for project
+
+### Week 3
+06/12 - 06/19
+
+**Completed proof of concept site**
+- Developed framework for structure of app and how the website will interact with a trained model
+- Framework is train model in jupyter notebook (using xgboost for now) -> save model to file -> flask python application to open it to API POST requests (features are included in request body) -> Dockerize -> Host on Google Cloud Run -> Call API with javascript POST request using fetch API on site 
+- Created a site with some simple javascript logic that allows user to enter features and their values via dropdowns/textboxes and call the API to see the baseline result
+- Currently model is trained on only baseline data in Alabama, and gives poor/nonsensical results
+- I have not yet done any EDA, hyperparameter tuning, etc so this is ok, it was only meant to be a proof of concept of the technology pipeline which is working well
+
+
+- Fails of the week
+	- Got stuck on an XGboost/numpy 2.0 (just released) compatibility issue for a while that I eventually only fixed by downgrading the numpy version
+- Successes of the week
+	- Got technology stack working
+- Difficulties of the week
+	- Getting flask app dockerized and hosted is not something I've done before, so it took some time to learn how to do this
+- Goals for next week:
+	- Explore data and attempt to improve model performance
