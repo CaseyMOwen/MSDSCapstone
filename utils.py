@@ -36,3 +36,14 @@ def process_data(X: pd.DataFrame, scaler:StandardScaler, pca:PCA, encoder:OneHot
     X_processed = pd.concat([pd.Series(X.index), pd.DataFrame(X_processed_array)], axis=1).set_index('Id')
     # X_processed = pd.concat([pd.DataFrame(X_numerical_pca), pd.DataFrame(X_categorical_encoded.toarray())], axis=1)
     return X_processed
+
+def drop_ignored_columns(X: pd.DataFrame):
+    column_plan_df = pd.read_csv('column_planning.csv')
+    to_drop = []
+    for index, row in column_plan_df.iterrows():
+        field = row['field_name']
+        keep = row['keep_for_model']
+        if keep == "No" and field in X:
+            to_drop.append(field)
+    X = X.drop(columns=to_drop)
+    return X
