@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "train.py", line 3, in <module>
+    import processingfuncs as pf
+  File "/cluster/home/cowen03/cluster/home/cowen03/capstone/processingfuncs.py", line 3, in <module>
+    import category_encoders as ce
+ModuleNotFoundError: No module named 'category_encoders'

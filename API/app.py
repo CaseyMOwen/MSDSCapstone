@@ -4,6 +4,8 @@ import json
 import pandas as pd
 import xgboost as xgb
 import os
+import pickle
+import numpy as np
 
 app = Flask(__name__)
 CORS(app)
@@ -19,7 +21,7 @@ def get_avg_home():
     return avg_home_df
 
 
-def set_feature(var, val, input_df):
+def set_feature(var, val, input_df: pd.DataFrame):
 #     var = 'in.ashrae_iecc_climate_zone_2004'
 # val = '2A'
 
@@ -33,10 +35,13 @@ def set_feature(var, val, input_df):
     return input_df
 
 def predict(input_df):
+    with open('appfiles/pipeline_pca.pkl', 'rb') as f:
+        pipeline = pickle.load(f)
+    X = pipeline.transform(input_df)
     booster = xgb.Booster()
     # model = xgb.XGBRegressor()
-    booster.load_model('appfiles/models/baseline_alabama.json')
-    dmatrix = xgb.DMatrix(input_df, enable_categorical=True)
+    booster.load_model('appfiles/models/xgb_model_baseline_pca.json')
+    dmatrix = xgb.DMatrix(X)
     return booster.predict(dmatrix)
 
 

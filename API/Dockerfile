@@ -7,12 +7,14 @@ WORKDIR /app
 
 
 # Python dependencies
-RUN pip install numpy==1.26.0
+RUN pip install numpy
 RUN pip install xgboost
 RUN pip install pandas
 RUN pip install flask
 RUN pip install gunicorn
 RUN pip install flask-cors
+RUN pip install scikit-learn==1.5.1
+RUN pip install category_encoders
 
 # Copy all directories to docker base image
 COPY . .
