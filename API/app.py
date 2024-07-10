@@ -6,6 +6,7 @@ import xgboost as xgb
 import os
 import pickle
 import numpy as np
+import processingfuncs as pf
 
 app = Flask(__name__)
 CORS(app)
@@ -19,6 +20,21 @@ def get_avg_home():
     for column in avg_home_df:
         avg_home_df[column] = avg_home_df[column].astype(combined_dicts['types'][column])
     return avg_home_df
+
+def sample_home(feats: dict, n_homes:int):
+    url = 'https://oedi-data-lake.s3.amazonaws.com/nrel-pds-building-stock/end-use-load-profiles-for-us-building-stock/2024/resstock_dataset_2024.1/resstock_tmy3/metadata_and_annual_results/by_state/state=AL/parquet/Baseline/AL_baseline_metadata_and_annual_results.parquet'
+    df = pd.read_parquet(url)
+    in_cols = [col for col in df.columns if col.startswith('in')]
+    X = df[in_cols]
+    X = pf.preprocess_columns(X)
+    # query_str = ' & '.join([repr(f'`{key}` == "{value}"') for key, value in feats.items()])
+    # query_str = '`in.geometry_floor_area` == "3000-3999"'
+    # print(query_str)
+    # filtered_df = df.query(query_str)
+    X_filtered = X.loc[(X[list(feats)] == pd.Series(feats)).all(axis=1)]
+    X_sampled = X_filtered.sample(n=n_homes, random_state=42)
+    return X_sampled
+
 
 
 def set_feature(var, val, input_df: pd.DataFrame):
@@ -40,7 +56,7 @@ def predict(input_df):
     X = pipeline.transform(input_df)
     booster = xgb.Booster()
     # model = xgb.XGBRegressor()
-    booster.load_model('appfiles/models/xgb_model_baseline_pca.json')
+    booster.load_model('appfiles/models/xgb_pca_model_baseline.json')
     dmatrix = xgb.DMatrix(X)
     return booster.predict(dmatrix)
 
@@ -48,12 +64,14 @@ def predict(input_df):
 
 @app.route('/predict', methods=['POST'])
 def predict_endpoint():
-    feats_df = get_avg_home()
+    # feats_df = get_avg_home()
     if request.data:
         feats = request.json  # Expecting JSON input
-        for feat in feats:
-            feats_df = set_feature(feat, feats[feat], feats_df)
-    predictions = predict(feats_df)
+    else:
+        feats = {}
+    print(feats)
+    samples_df = sample_home(feats, 50)
+    predictions = predict(samples_df)
     return jsonify(predictions.tolist())
 
 if __name__ == '__main__':

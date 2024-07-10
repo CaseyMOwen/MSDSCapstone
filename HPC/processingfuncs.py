@@ -130,7 +130,7 @@ def build_column_transformer():
     # Binary
     binary_fields = column_plan_df[column_plan_df['encoder'] == 'Binary']['field_name'].to_list()
     binary_fields += custom_binary_cols
-    binary_encoder = ce.BinaryEncoder(cols=binary_fields)
+    binary_encoder = ce.BinaryEncoder(cols=binary_fields, drop_invariant=True)
 
     # Ordinal
     full_mapping = []
@@ -146,11 +146,11 @@ def build_column_transformer():
     ordinal_fields = []
     for mapping in full_mapping:
         ordinal_fields.append(mapping['col'])
-    ordinal_encoder = ce.OrdinalEncoder(cols=ordinal_fields, mapping=full_mapping)
+    ordinal_encoder = ce.OrdinalEncoder(cols=ordinal_fields, mapping=full_mapping, drop_invariant=True)
 
     # Catboost
     catboost_fields = column_plan_df[column_plan_df['encoder'] == 'CatBoost']['field_name'].to_list()
-    catboost_encoder = ce.CatBoostEncoder(cols=catboost_fields)
+    catboost_encoder = ce.CatBoostEncoder(cols=catboost_fields, drop_invariant=True)
 
     preprocessor = ColumnTransformer(
     transformers=[

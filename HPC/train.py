@@ -16,6 +16,8 @@ from sklearn.model_selection import KFold
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestRegressor
 import joblib
+from datetime import datetime
+from pathlib import Path
 
 
 url = 'https://oedi-data-lake.s3.amazonaws.com/nrel-pds-building-stock/end-use-load-profiles-for-us-building-stock/2024/resstock_dataset_2024.1/resstock_tmy3/metadata_and_annual_results/national/parquet/Baseline/baseline_metadata_and_annual_results.parquet'
@@ -26,6 +28,8 @@ df = pd.read_parquet(url)
 
 # df = pd.read_parquet('first_ten.parquet')
 # pd.Series(df.columns).to_csv('all_columns.csv')
+today = datetime.today().strftime('%Y-%m-%d')
+Path(today).mkdir(parents=True, exist_ok=True)
 
 in_cols = [col for col in df.columns if col.startswith('in')]
 out_cols = [col for col in df.columns if col.startswith('out')]
@@ -49,10 +53,10 @@ X_train_clean = pipeline.fit_transform(X_train, y_train)
 X_test_clean = pipeline.transform(X_test)
 X_clean = pipeline.transform(X)
 
-with open('pipeline.pkl', 'wb') as f:
+with open(today + '/pipeline_pca.pkl', 'wb') as f:
     pickle.dump(pipeline, f)
 
-'''
+
 xgb_estimator = XGBRegressor(
     objective = 'reg:squarederror',
     tree_method = 'hist',
@@ -69,7 +73,8 @@ xgb_estimator = XGBRegressor(
 
 
 xgb_grid = {
-        'max_depth': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        # 'max_depth': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        'max_depth': [4, 5, 6],
         'min_child_weight': np.arange(0.0001, 0.5, 0.001),
         'gamma': np.arange(0.0,40.0,0.005),
         'learning_rate': np.arange(0.0005,0.3,0.0005),
@@ -81,7 +86,7 @@ xgb_grid = {
 xgb_random_search = RandomizedSearchCV(
     estimator=xgb_estimator,
     param_distributions=xgb_grid,
-    n_iter=50,
+    n_iter=200,
     scoring = ('r2', 'neg_root_mean_squared_error'),
     refit='neg_root_mean_squared_error',
     n_jobs = -1,
@@ -108,7 +113,7 @@ xgb_random_search = RandomizedSearchCV(
 xgb_random_search.fit(X_train_clean, y_train)
 xgb_results_df = pd.DataFrame(xgb_random_search.cv_results_)
 xgb_model = xgb_random_search.best_estimator_
-xgb_results_df.to_csv('pca_xgb_random_search_results.csv')
+xgb_results_df.to_csv(today + '/xgb_random_search_results.csv')
 
 
 # model = XGBRegressor(
@@ -132,7 +137,7 @@ print(f"RMSE of the best xgb model: {rmse:.5f}")
 
 xgb_model.fit(X_clean,y)
 booster = xgb_model.get_booster()
-booster.save_model('xgb_model_baseline.json')
+booster.save_model(today + '/xgb_pca_model_baseline.json')
 '''
 ##Repeat for Random Forest
 
@@ -164,7 +169,7 @@ rf_random_search = RandomizedSearchCV(
     return_train_score=True
 )
 
-# pf.random_search(parameters, X_train_clean, y_train, cv=3, n_iter=100, results_path='random_search_results.csv')
+# pf.random_search(parameters, X_train_clean, y_train, cv=3, n_iter=100, results_path=today + '/random_search_results.csv')
 
 
 # grid_search = GridSearchCV(
@@ -181,7 +186,7 @@ rf_random_search = RandomizedSearchCV(
 rf_random_search.fit(X_train_clean, y_train)
 rf_results_df = pd.DataFrame(rf_random_search.cv_results_)
 rf_model = rf_random_search.best_estimator_
-rf_results_df.to_csv('pca_rf_random_search_results.csv')
+rf_results_df.to_csv(today + '/pca_rf_random_search_results.csv')
 
 
 # model = XGBRegressor(
@@ -203,4 +208,5 @@ print(f"RMSE of the best rf model: {rmse:.5f}")
 
 # Make the final model on the full dataset
 rf_model.fit(X_clean,y)
-joblib.dump(rf_model,"rf_model_baseline.joblib")
+joblib.dump(rf_model,"today + '/rf_model_baseline.joblib")
+'''

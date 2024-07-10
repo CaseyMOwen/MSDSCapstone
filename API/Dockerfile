@@ -15,6 +15,7 @@ RUN pip install gunicorn
 RUN pip install flask-cors
 RUN pip install scikit-learn==1.5.1
 RUN pip install category_encoders
+RUN pip install pyarrow
 
 # Copy all directories to docker base image
 COPY . .

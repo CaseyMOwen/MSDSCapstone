@@ -70,7 +70,7 @@
                     featureSelect.addEventListener('change', function() {
                         const selectedFeature = featureSelect.value;
                         
-                        if (feat_json[selectedFeature]['data_type'] == 'string') {
+                        if (feat_json[selectedFeature]['type'] == 'category') {
                             if (featurevalueInput != null) {
                                 featurevalueSelect = document.createElement('select');
                                 featurevalueInput.replaceWith(featurevalueSelect)
@@ -78,8 +78,8 @@
                             featurevalueSelect.innerHTML = '<option value="">Select a value</option>';
                             if (selectedFeature) {
                                 featurevalueSelect.disabled = false;
-                                const featurevalues = feat_json[selectedFeature]['allowable_enumerations_baseline'];
-                                description.innerHTML = feat_json[selectedFeature]['field_description']
+                                const featurevalues = feat_json[selectedFeature]['enumerations'];
+                                // description.innerHTML = feat_json[selectedFeature]['field_description']
                                 for (const featurevalue of featurevalues) {
                                     const option = document.createElement('option');
                                     option.value = featurevalue;
