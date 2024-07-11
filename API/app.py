@@ -22,7 +22,8 @@ def get_avg_home():
     return avg_home_df
 
 def sample_home(feats: dict, n_homes:int):
-    url = 'https://oedi-data-lake.s3.amazonaws.com/nrel-pds-building-stock/end-use-load-profiles-for-us-building-stock/2024/resstock_dataset_2024.1/resstock_tmy3/metadata_and_annual_results/by_state/state=AL/parquet/Baseline/AL_baseline_metadata_and_annual_results.parquet'
+    state = feats["in.state"]
+    url = f'https://oedi-data-lake.s3.amazonaws.com/nrel-pds-building-stock/end-use-load-profiles-for-us-building-stock/2024/resstock_dataset_2024.1/resstock_tmy3/metadata_and_annual_results/by_state/state={state}/parquet/Baseline/{state}_baseline_metadata_and_annual_results.parquet'
     df = pd.read_parquet(url)
     in_cols = [col for col in df.columns if col.startswith('in')]
     X = df[in_cols]
@@ -70,7 +71,7 @@ def predict_endpoint():
     else:
         feats = {}
     print(feats)
-    samples_df = sample_home(feats, 50)
+    samples_df = sample_home(feats, 10)
     predictions = predict(samples_df)
     return jsonify(predictions.tolist())
 

@@ -10,6 +10,9 @@
     <body>
         <div id="content">   
         <h1>Home Energy Calculator</h1>
+        <div id="countySelectContainer">
+            <!-- Dropdown pairs will be appended here -->
+        </div>
         <div id="dropdownContainer">
             <!-- Dropdown pairs will be appended here -->
         </div>
@@ -23,6 +26,62 @@
             const dropdownContainer = document.getElementById('dropdownContainer');
             const addDropdownButton = document.getElementById('addDropdownButton');
             featuresDict = {}
+            
+            function createCountySelector() {
+                fetch('county_lookup.json')
+                .then((response) => response.json())
+                .then((county_json) => {
+
+                // Populate the state dropdown
+                const stateSelect = document.createElement('select');
+                stateSelect.setAttribute("id", "state-select")
+                stateSelect.setAttribute("required", "required")
+                const countySelect = document.createElement('select');
+                countySelect.setAttribute("required", "required")
+                countySelect.setAttribute("id", "county-select")
+                countySelectContainer.appendChild(stateSelect)
+                countySelectContainer.appendChild(countySelect)
+
+                for (const state in county_json) {
+                    if (state == "AK" || state == "HI" || state == "PR"){
+                        continue
+                    }
+                    const option = document.createElement('option');
+                    option.value = state;
+                    option.textContent = state;
+                    stateSelect.appendChild(option);
+                }
+                
+                function populateCounties() {
+                    // Clear previous county options
+                    countySelect.innerHTML = '<option value="">Select a county</option>';
+
+                    // Get selected state
+                    const selectedState = stateSelect.value;
+
+                    // Enable county dropdown if a valid state is selected
+                    if (selectedState) {
+                        countySelect.disabled = false;
+
+                        // Populate county dropdown
+                        const counties = county_json[selectedState];
+                        for (const county of counties) {
+                            const option = document.createElement('option');
+                            option.value = county['gisjoin'];
+                            option.textContent = county['name'];
+                            countySelect.appendChild(option);
+                        }
+                    } else {
+                        countySelect.disabled = true;
+                    }
+                    }
+                // Event listener for state dropdown
+                stateSelect.selectedIndex=0
+                populateCounties()
+                stateSelect.addEventListener('change', populateCounties);
+
+                })
+            }
 
             function createDropdownPair() {
                 fetch('data_dictionary.json')
@@ -105,6 +164,7 @@
             //     createDropdownPair();
             // }
 
+            createCountySelector();
             // Initial dropdown pair
             createDropdownPair();
 
@@ -112,7 +172,13 @@
             addDropdownButton.addEventListener('click', createDropdownPair);
 
             function getFeatureDict() {
-                featDict = {}
+                county = document.getElementById('county-select').value
+                state = document.getElementById('state-select').value
+                if(county==="" || state ===""){
+                    alert("You must select both a state and a county");
+                    return false;
+                }
+                featDict = {"in.county": county, "in.state": state}
                 for (let i = 0; i < dropdownContainer.children.length; i++) {
                     const pair = dropdownContainer.children[i];
                     const feature = pair.getElementsByClassName('feature-select')[0].value
@@ -132,7 +198,9 @@
     <button id="postButton">Get Savings</button>
         <script src="api.js"></script>
     </br>
-        <div id="result"></div>
+        <div id="25th Percentile"></div>
+        <div id="Median"></div>
+        <div id="75th Percentile"></div>
 
     </div>
 
