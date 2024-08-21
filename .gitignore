@@ -2,3 +2,5 @@
 /.history
 /.venv
 /Data
+*config.*
+/HPC/Jobs

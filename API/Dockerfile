@@ -4,21 +4,27 @@ FROM python:3.10-bookworm
 # The /app directory should act as the main application directory
 WORKDIR /app
 
+# Copy ONLY requirements. This layer is cached if this file doesn't change
+COPY requirements.txt . 
 
-
-# Python dependencies
-RUN pip install numpy
-RUN pip install xgboost
-RUN pip install pandas
-RUN pip install flask
-RUN pip install gunicorn
-RUN pip install flask-cors
-RUN pip install scikit-learn==1.5.1
-RUN pip install category_encoders
-RUN pip install pyarrow
+# This uses the cached layer if the previous layer was cached aswell
+RUN pip install -r requirements.txt 
 
 # Copy all directories to docker base image
 COPY . .
+
+# Python dependencies
+# RUN pip install xgboost==2.1.0
+# RUN pip install numpy==2.0.0
+# RUN pip install pandas==2.2.2
+# RUN pip install flask
+# RUN pip install gunicorn
+# RUN pip install flask-cors
+# RUN pip install scikit-learn==1.5.1
+# RUN pip install category_encoders
+# RUN pip install pyarrow
+
+
 
 ENV PORT 8080
 # Make port 8080 available to the worl outside container

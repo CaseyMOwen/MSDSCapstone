@@ -39,6 +39,8 @@ def str_to_int(text:str):
 def split_columns(X:pd.DataFrame):
     # Split possible outcomes by comma, leakage and insulation are two features
     X[['in.duct_leakage','in.duct_insulation']] = X['in.duct_leakage_and_insulation'].str.split(', ',expand=True)
+    X['in.duct_insulation'] = X['in.duct_insulation'].fillna('None')
+
     X = X.drop(columns=['in.duct_leakage_and_insulation'])
 
     # Columns that are integers with "None" as 0
@@ -77,6 +79,20 @@ def convert_categorical(X: pd.DataFrame):
     pd.options.mode.chained_assignment = 'warn'  # default='warn'
     return X
 
+def add_tmy3_data(X:pd.DataFrame):
+    tmy3_df = pd.read_csv('TMY3_aggregates.csv', index_col='gisjoin')
+    combined = X.join(tmy3_df, on='in.county', how='left')
+    # combined.set_index('bldg_id')
+    # print(combined)
+    # combined.to_csv('test_join.csv')
+    combined = combined.drop(columns=['state', 'county', 'in.county'])
+    return combined
+
+def add_ftmy3_data(X:pd.DataFrame, state:str, gisjoin:str, year_range:str):
+    ftmy3_df = pd.read_csv(f'appfiles/fTMY3_aggregates/{state}/{gisjoin}/{year_range}.csv', index_col='gisjoin')
+    combined = X.join(ftmy3_df, on='in.county', how='left')
+    combined = combined.drop(columns=['state', 'county', 'year range', 'in.county'])
+    return combined
 
 def preprocess_columns(X: pd.DataFrame):
     # X = convert_categorical(X)
