@@ -5,11 +5,68 @@
         <title>Home Energy</title>
         <link href="styles/styles.css" rel="stylesheet" type="text/css">
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
+        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+
     </head>
 
+    <script>
+
+    </script>
     <body>
+        
         <div id="content">   
-        <h1>Home Energy Calculator</h1>
+            <h1>Home Energy Calculator</h1>
+        <div id="map_wrapper"></div>
+        <!-- <object data="test_map.html", width="1500px", height="500px", id="map_html"></object> -->
+        <script>
+            state = 'California'
+            document.getElementById('map_wrapper').innerHTML = '<object data="maps/' + state + '_map.html", width="1500px", height="500px", id="map_html"></object>'
+            function findFirstDescendant(parentclass, doc, tagname)
+            {
+            parent = doc.getElementsByClassName(parentclass)[0];
+            var descendants = parent.getElementsByTagName(tagname);
+            if ( descendants.length )
+                return descendants[0];
+            return null;
+            }
+
+            mapdoc = document.getElementById('map_html').contentDocument 
+            function writeGISJOIN(evt){
+                mapdoc = document.getElementById('map_html').contentDocument 
+                var table = findFirstDescendant('leaflet-tooltip-pane', mapdoc, 'table')
+                result = {}
+                for (let i = 0; i < table.rows.length; i++) {
+                    // for (let j = 0; i < 2; i++) {
+                    key = table.rows[i].cells[0].innerHTML
+                    val = table.rows[i].cells[1].innerHTML
+                    result[key] = val
+                }
+                // gisjoin = table.rows[0].cells[1].innerHTML
+                console.log(result)
+                gisjoin_puma = result['GISJOIN'].slice(0,-1) + ", " + result['GISJOIN'].slice(0,4)  + result['PUMA']
+                console.log(gisjoin_puma)
+            }
+            var checkExist = setInterval(function() {
+                mapdoc = document.getElementById('map_html').contentDocument 
+            if (mapdoc.getElementsByClassName('leaflet-interactive').length) {
+                // alert('object exists!')
+                var row = mapdoc.getElementsByClassName('leaflet-interactive')
+                for (let i = 0; i < row.length; i++) {
+                    row[i].addEventListener('click',writeGISJOIN);
+                }
+                clearInterval(checkExist);
+            }
+            }, 100); // check every 100ms
+            // if (checkExist) {
+                
+            // }
+        // var row = document.getElementsByClassName('leaflet-interactive')
+        // for (let i = 0; i < row.length; i++) {
+        //     row[i].addEventListener('click',writeGISJOIN);
+        // }
+        // row.addEventListener('click',writeGISJOIN)
+
+        </script>
         <div id="yearRangeButtons">
             <!-- Dropdown pairs will be appended here -->
         </div>
