@@ -9,7 +9,7 @@ import time
 from urllib.parse import quote_plus
 from sqlalchemy.engine import create_engine
 import pandas as pd
-from config import Aws as aws
+# from config import Aws as aws
 from pyathena import connect
 from pyathena.pandas.cursor import PandasCursor
 import pipelineclasses as pc
@@ -50,6 +50,7 @@ def predict_endpoint():
     print(f"Total Time: {stop - start}")
     return jsonify(predictions.tolist())
 
+'''
 def create_athena_connection():
     # query = "SELECT * FROM \"resstock\".\"resstock_dataset_2024.1parquet\" WHERE upgrade='0' limit 9;"
 
@@ -87,7 +88,6 @@ def query_athena(query):
 
     return df
 
-'''
 def get_avg_home():
     with open('appfiles/avg_home.json') as f: 
         data = f.read() 
