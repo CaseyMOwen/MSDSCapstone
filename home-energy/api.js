@@ -17,8 +17,8 @@ document.getElementById('postButton').addEventListener('click', () => {
 
   function getSavings(featdict={}) {
         
-    // return fetch("https://msdscapstone-33o5dpumiq-uc.a.run.app/predict", {
-    return fetch("http://localhost:9090/predict", {
+    return fetch("https://msdscapstone-33o5dpumiq-uc.a.run.app/predict", {
+    // return fetch("http://localhost:9090/predict", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

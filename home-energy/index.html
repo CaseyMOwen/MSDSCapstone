@@ -35,7 +35,7 @@
             }
 
             // mapdoc = document.getElementById('map_html').contentDocument 
-            function writeGISJOIN(evt) {
+            function writeRegion(evt) {
                 mapdoc = document.getElementById('map_html').contentDocument 
                 var table = findFirstDescendant('leaflet-tooltip-pane', mapdoc, 'table')
                 result = {}
@@ -60,7 +60,7 @@
                     load_ele.innerHTML = ''
                     var row = mapdoc.getElementsByClassName('leaflet-interactive')
                     for (let i = 0; i < row.length; i++) {
-                        row[i].addEventListener('click',writeGISJOIN);
+                        row[i].addEventListener('click',writeRegion);
                     }
                     clearInterval(checkExist);
                 }
@@ -103,9 +103,9 @@
             // }
         // var row = document.getElementsByClassName('leaflet-interactive')
         // for (let i = 0; i < row.length; i++) {
-        //     row[i].addEventListener('click',writeGISJOIN);
+        //     row[i].addEventListener('click',writeRegion);
         // }
-        // row.addEventListener('click',writeGISJOIN)
+        // row.addEventListener('click',writeRegion)
 
         </script>
         <div id="yearRangeButtons">
@@ -317,19 +317,20 @@
             addDropdownButton.addEventListener('click', createDropdownPair);
 
             function getFeatureDict() {
-                county = document.getElementById('county-select').value
-                state = document.getElementById('state-select').value
+                // county = document.getElementById('county-select').value
+                // state = document.getElementById('state-select').value
                 year_container = document.getElementById('yearRangeButtons')
                 inputs = year_container.getElementsByTagName('input')
                 for (var i = 0; i < inputs.length; ++i)
                     if (inputs[i].checked) {
                         year_range = inputs[i].value
                     }
-                if(county==="" || state ===""){
-                    alert("You must select both a state and a county");
+                county_and_puma = document.getElementById('region-hidden').innerHTML
+                if(county_and_puma===""){
+                    alert("You must select a region first!");
                     return false;
                 }
-                featDict = {"in.county": county, "in.state": state, "year_range": year_range}
+                featDict = {"in.county_and_puma": county_and_puma, "year_range": year_range, "num_samples": 200}
                 for (let i = 0; i < dropdownContainer.children.length; i++) {
                     const pair = dropdownContainer.children[i];
                     const feature = pair.getElementsByClassName('feature-select')[0].value
