@@ -29,15 +29,15 @@ def predict_endpoint():
         feats = {}
     start = time.time()
     # X = sample_home(feats, 100)
-    state = feats["in.state"]
-    gisjoin = feats["in.county"]
+    # state = feats["in.state"]
+    gisjoin = feats["in.county_and_puma"].split(", ")[0]
     year_range = feats["year_range"]
     if "num_samples" in feats:
         num_samples = feats["num_samples"]
         del feats["num_samples"]
     else:
         num_samples = 100
-    X = generate_sample(feats, num_samples)
+    X, state = generate_sample(feats, num_samples)
     step1 = time.time()
     print(feats)
     X = transform_sample(X.to_pandas(), year_range, state, gisjoin)
@@ -191,18 +191,11 @@ def to_underscore_case(s):
 
 # Feats is dictionary with unserscore case field names, and value as value
 
-def generate_sample(feats:dict={'in.county':'G1200090'}, num_samples:int=100):
+def generate_sample(feats:dict={'in.county_and_puma':'G0900030, G09000306'}, num_samples:int=100):
 # For each row in dependencies list - check if we have what we need for this column, and if we need it. If so, add a column to the samples df, each of correct distribution according to the existing row
     feats.pop("year_range")
-    if not "in.county" in feats:
-        raise ValueError("feats must include at least in.county as a key")
-    
-    with open('resstock_county_lookup.json') as json_file:
-        gispuma_lookup = json.load(json_file)
-
-    gispuma = gispuma_lookup[feats["in.county"]]
-    del feats["in.county"]
-    feats["in.county_and_puma"] = gispuma
+    if not "in.county_and_puma" in feats:
+        raise ValueError("feats must include at least in.county_and_puma as a key")
     dep_df = pd.read_csv('dependecies_list.csv')
     column_plan_df = pd.read_csv('column_plan.csv', usecols=['field_name','keep_for_model'])
     # List of columns that the model requires as inputs
@@ -248,7 +241,8 @@ def generate_sample(feats:dict={'in.county':'G1200090'}, num_samples:int=100):
     # Can safely remove all columns not needed for model but for dependencies
     model_cols = needed_und_cols + list(feats)
     model_cols.remove("in.county_and_puma")
-    return clean_sample(sample_df, model_cols)
+    state = sample_df.item(0, "in.state")
+    return clean_sample(sample_df, model_cols), state
     # clean_sample(sample_df, model_cols).write_csv('sample_test.csv')
 
 def clean_sample(sample_df: pl.DataFrame, model_cols:list[str]) -> pl.DataFrame:
