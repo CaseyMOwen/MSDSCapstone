@@ -3,6 +3,10 @@
     margin: 5px
 }
 
+#countySelectContainer select, #countySelectContainer div {
+    display:inline;
+}
+
 #countySelectContainer select, .dropdown-pair select{
     margin-right:10px;
     margin-bottom: 20px

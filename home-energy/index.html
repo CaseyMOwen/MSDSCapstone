@@ -6,32 +6,36 @@
         <link href="styles/styles.css" rel="stylesheet" type="text/css">
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
         <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-
+        
     </head>
-
+    
     <script>
-
+        
     </script>
     <body>
         
         <div id="content">   
             <h1>Home Energy Calculator</h1>
+        <div id="countySelectContainer">
+            <!-- Dropdown pairs will be appended here -->
+            <!-- <div id="map-loading">Map is Loading...</div> -->
+        </div>
         <div id="map_wrapper"></div>
+        <div id="region-visible">Selected Region:</div>
+        <div id="region-hidden"></div>
         <!-- <object data="test_map.html", width="1500px", height="500px", id="map_html"></object> -->
         <script>
-            state = 'California'
-            document.getElementById('map_wrapper').innerHTML = '<object data="maps/' + state + '_map.html", width="1500px", height="500px", id="map_html"></object>'
-            function findFirstDescendant(parentclass, doc, tagname)
-            {
-            parent = doc.getElementsByClassName(parentclass)[0];
-            var descendants = parent.getElementsByTagName(tagname);
-            if ( descendants.length )
-                return descendants[0];
-            return null;
+
+            function findFirstDescendant(parentclass, doc, tagname) {
+                parent = doc.getElementsByClassName(parentclass)[0];
+                var descendants = parent.getElementsByTagName(tagname);
+                if ( descendants.length )
+                    return descendants[0];
+                return null;
             }
 
-            mapdoc = document.getElementById('map_html').contentDocument 
-            function writeGISJOIN(evt){
+            // mapdoc = document.getElementById('map_html').contentDocument 
+            function writeGISJOIN(evt) {
                 mapdoc = document.getElementById('map_html').contentDocument 
                 var table = findFirstDescendant('leaflet-tooltip-pane', mapdoc, 'table')
                 result = {}
@@ -45,18 +49,55 @@
                 console.log(result)
                 gisjoin_puma = result['GISJOIN'].slice(0,-1) + ", " + result['GISJOIN'].slice(0,4)  + result['PUMA']
                 console.log(gisjoin_puma)
+                document.getElementById('region-visible').innerHTML = "Selected Region: " + result['Name'].slice(0,-5)
+                document.getElementById('region-hidden').innerHTML = gisjoin_puma
             }
-            var checkExist = setInterval(function() {
-                mapdoc = document.getElementById('map_html').contentDocument 
-            if (mapdoc.getElementsByClassName('leaflet-interactive').length) {
-                // alert('object exists!')
-                var row = mapdoc.getElementsByClassName('leaflet-interactive')
-                for (let i = 0; i < row.length; i++) {
-                    row[i].addEventListener('click',writeGISJOIN);
+            function createPUMAListeners() {
+                var checkExist = setInterval(function() {
+                    mapdoc = document.getElementById('map_html').contentDocument 
+                if (mapdoc.getElementsByClassName('leaflet-interactive').length) {
+                    // Map is done loading
+                    load_ele.innerHTML = ''
+                    var row = mapdoc.getElementsByClassName('leaflet-interactive')
+                    for (let i = 0; i < row.length; i++) {
+                        row[i].addEventListener('click',writeGISJOIN);
+                    }
+                    clearInterval(checkExist);
                 }
-                clearInterval(checkExist);
+                }, 100); // check every 100ms
             }
-            }, 100); // check every 100ms
+
+            function loadMap() {
+                // state = 'Connecticut'
+                // const ele = document.createElement('div');
+                // ele.setAttribute("id", "map-text")
+                load_ele = document.getElementById('map-loading') 
+                // wrapper.appendChild(ele)
+                state = document.getElementById('state-select').value
+                load_ele.innerHTML = state + ' map is loading...'
+                document.getElementById('map_wrapper').innerHTML = '<object data="maps/' + state + '_map.html", width="1500px", height="500px", id="map_html"></object>'
+                createPUMAListeners()
+                
+            }
+
+            function setMapPleaseSelect() {
+                const ele = document.createElement('div');
+                ele.setAttribute("id", "map-text")
+                wrapper = document.getElementById('map_wrapper') 
+                wrapper.appendChild(ele)
+                ele.innerHTML = 'Please select a state to load the region picker'
+
+                wrapper.style.setProperty('width', '1500px');
+                wrapper.style.setProperty('height', '500px');
+                ele.style.setProperty('text-align', 'center');
+                // ele.style.setProperty('display', 'inline');
+                // ele.style.setProperty('vertical-align', 'middle');
+                wrapper.style.setProperty('border', '1px solid black');
+                ele.style.setProperty('margin-top', '200px');
+                ele.style.setProperty('font-size', '20px')
+            }
+            document.getElementById("region-hidden").style.display = 'none';
+
             // if (checkExist) {
                 
             // }
@@ -68,9 +109,6 @@
 
         </script>
         <div id="yearRangeButtons">
-            <!-- Dropdown pairs will be appended here -->
-        </div>
-        <div id="countySelectContainer">
             <!-- Dropdown pairs will be appended here -->
         </div>
         <div id="dropdownContainer">
@@ -121,30 +159,41 @@
 
 
             function createCountySelector() {
-                fetch('county_lookup.json')
+                fetch('states.json')
                 .then((response) => response.json())
-                .then((county_json) => {
+                .then((states) => {
 
                 // Populate the state dropdown
                 const stateSelect = document.createElement('select');
                 stateSelect.setAttribute("id", "state-select")
                 stateSelect.setAttribute("required", "required")
-                const countySelect = document.createElement('select');
-                countySelect.setAttribute("required", "required")
-                countySelect.setAttribute("id", "county-select")
+                // const countySelect = document.createElement('select');
+                // countySelect.setAttribute("required", "required")
+                // countySelect.setAttribute("id", "county-select")
                 countySelectContainer.appendChild(stateSelect)
-                countySelectContainer.appendChild(countySelect)
-
-                for (const state in county_json) {
-                    if (state == "AK" || state == "HI" || state == "PR"){
-                        continue
-                    }
+                const mapLoading = document.createElement('div')
+                mapLoading.setAttribute("id", "map-loading")
+                countySelectContainer.appendChild(mapLoading)
+                // countySelectContainer.appendChild(countySelect)
+                
+                const option = document.createElement('option');
+                option.value = '-- Select a State --';
+                option.textContent = '-- Select a State --';
+                option.disabled = true
+                option.selected = true
+                stateSelect.appendChild(option);
+                for (const state in states) {
+                    // if (state == "AK" || state == "HI" || state == "PR"){
+                    //     continue
+                    // }
                     const option = document.createElement('option');
-                    option.value = state;
-                    option.textContent = state;
+                    option.value = states[state];
+                    option.textContent = states[state];
                     stateSelect.appendChild(option);
                 }
-                
+
+
+
                 function populateCounties() {
                     // Clear previous county options
                     countySelect.innerHTML = '<option value="">Select a county</option>';
@@ -169,9 +218,12 @@
                     }
                     }
                 // Event listener for state dropdown
-                stateSelect.selectedIndex=0
-                populateCounties()
-                stateSelect.addEventListener('change', populateCounties);
+                // stateSelect.selectedIndex=5
+                // populateCounties()
+                // document.getElementById('map_wrapper').innerHTML = 'Please select a State'
+                // loadMap()
+                setMapPleaseSelect()
+                stateSelect.addEventListener('change', loadMap);
 
                 })
             }
