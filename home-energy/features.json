@@ -160,10 +160,21 @@
         },
         "Total Floor Area":
         {
-            "type":"input",
+            "type":"option",
             "feature":"in.geometry_floor_area",
-            "options":"n/a",
-            "units":"square feet"
+            "options":
+            {
+                "0-499 sqft":"0-499",
+                "500-749 sqft": "500-749",
+                "750-999 sqft": "750-999",
+                "1,000-1,499 sqft": "1000-1499",
+                "1,500-1,999 sqft": "1500-1999",
+                "2,000-2,499 sqft":"2000-2499",
+                "2,500-2,999 sqft": "2500-2999",
+                "3,000-3,999 sqft": "3000-3999",
+                "4,000+ sqft": "4000+"
+            },
+            "units":"n/a"
         },
         "# Of Occupants":
         {
