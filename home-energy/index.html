@@ -47,10 +47,10 @@
                 }
                 // gisjoin = table.rows[0].cells[1].innerHTML
                 console.log(result)
-                gisjoin_puma = result['GISJOIN'].slice(0,-1) + ", " + result['GISJOIN'].slice(0,4)  + result['PUMA']
-                console.log(gisjoin_puma)
-                document.getElementById('region-visible').innerHTML = "Selected Region: " + result['Name'].slice(0,-5)
-                document.getElementById('region-hidden').innerHTML = gisjoin_puma
+                // gisjoin_puma = result['GISJOIN'].slice(0,-1) + ", " + result['GISJOIN'].slice(0,4)  + result['PUMA']
+                // console.log(gisjoin_puma)
+                document.getElementById('region-visible').innerHTML = "Selected Region: " + result['Name']
+                document.getElementById('region-hidden').innerHTML = result['GEOID']
             }
             function createPUMAListeners() {
                 var checkExist = setInterval(function() {
@@ -325,12 +325,12 @@
                     if (inputs[i].checked) {
                         year_range = inputs[i].value
                     }
-                county_and_puma = document.getElementById('region-hidden').innerHTML
-                if(county_and_puma===""){
+                geoid = document.getElementById('region-hidden').innerHTML
+                if(geoid===""){
                     alert("You must select a region first!");
                     return false;
                 }
-                featDict = {"in.county_and_puma": county_and_puma, "year_range": year_range, "num_samples": 200}
+                featDict = {"geoid": geoid, "year_range": year_range, "num_samples": 50}
                 for (let i = 0; i < dropdownContainer.children.length; i++) {
                     const pair = dropdownContainer.children[i];
                     const feature = pair.getElementsByClassName('feature-select')[0].value

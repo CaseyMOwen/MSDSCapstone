@@ -30,14 +30,14 @@ def predict_endpoint():
     start = time.time()
     # X = sample_home(feats, 100)
     # state = feats["in.state"]
-    gisjoin = feats["in.county_and_puma"].split(", ")[0]
+    # gisjoin = feats["in.county_and_puma"].split(", ")[0]
     year_range = feats["year_range"]
     if "num_samples" in feats:
         num_samples = feats["num_samples"]
         del feats["num_samples"]
     else:
         num_samples = 100
-    X, state = generate_sample(feats, num_samples)
+    X, state, gisjoin = generate_sample(feats, num_samples)
     step1 = time.time()
     print(feats)
     X = transform_sample(X.to_pandas(), year_range, state, gisjoin)
@@ -191,11 +191,19 @@ def to_underscore_case(s):
 
 # Feats is dictionary with unserscore case field names, and value as value
 
-def generate_sample(feats:dict={'in.county_and_puma':'G0900030, G09000306'}, num_samples:int=100):
+def generate_sample(feats:dict={'geoid':'0900306'}, num_samples:int=100):
 # For each row in dependencies list - check if we have what we need for this column, and if we need it. If so, add a column to the samples df, each of correct distribution according to the existing row
     feats.pop("year_range")
-    if not "in.county_and_puma" in feats:
-        raise ValueError("feats must include at least in.county_and_puma as a key")
+    if not "geoid" in feats:
+        raise ValueError("feats must include at least geoid as a key")
+    
+    with open('geoid_lookup.json') as json_file:
+        geoid_lookup = json.load(json_file)
+
+    county_and_puma = geoid_lookup[feats["geoid"]]
+    del feats["geoid"]
+    feats["in.county_and_puma"] = county_and_puma
+    
     dep_df = pd.read_csv('dependecies_list.csv')
     column_plan_df = pd.read_csv('column_plan.csv', usecols=['field_name','keep_for_model'])
     # List of columns that the model requires as inputs
@@ -242,7 +250,8 @@ def generate_sample(feats:dict={'in.county_and_puma':'G0900030, G09000306'}, num
     model_cols = needed_und_cols + list(feats)
     model_cols.remove("in.county_and_puma")
     state = sample_df.item(0, "in.state")
-    return clean_sample(sample_df, model_cols), state
+    gisjoin = sample_df.item(0, "in.county_and_puma").split(", ")[0]
+    return clean_sample(sample_df, model_cols), state, gisjoin
     # clean_sample(sample_df, model_cols).write_csv('sample_test.csv')
 
 def clean_sample(sample_df: pl.DataFrame, model_cols:list[str]) -> pl.DataFrame:
