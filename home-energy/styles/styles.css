@@ -3,6 +3,18 @@
     margin: 5px
 }
 
+#region-visible {
+    margin-top: 20px;
+}
+
+#yearRangeButtons {
+    margin-top: 20px;
+}
+
+#year-range-description {
+    max-width: 1000px;
+}
+
 #countySelectContainer select, #countySelectContainer div {
     display:inline;
 }
@@ -12,6 +24,51 @@
     margin-bottom: 20px
 }
 
+#feature-container {
+   margin-top: 20px;
+   margin-bottom: 20px; 
+}
+
+.category-container {
+    margin: 10px 0
+    
+}
+
+.category-header, #year-range-header {
+    font-weight: bold;
+    font-size: 20px;
+    
+    /* text-align: center; */
+}
+
+.questions-container {
+    width:1500px;
+    display: grid;
+    grid-template-columns: 500px 500px 500px;
+}
+
+.question-header {
+    /* width:fit-content */
+    /* text-align: center; */
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+.radio-container {
+    display: grid;
+    grid-template-columns: 25px auto;
+}
+
+.textbox-container > * {
+    display: inline;
+}
+
+.textbox-container > input {
+    margin-right: 5px;
+    width
+}
 #content {
     margin: 50px 0px 0px 150px
 }

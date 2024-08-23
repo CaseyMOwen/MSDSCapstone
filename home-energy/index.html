@@ -26,6 +26,25 @@
         <!-- <object data="test_map.html", width="1500px", height="500px", id="map_html"></object> -->
         <script>
 
+            
+
+        </script>
+        <div id="feature-container">
+            <!-- Feature Radio Buttons will be appended here -->
+        </div>
+        <div id="year-range-header">Time Period Selection</div>
+        <div id="year-range-description">What time period would you like the home's energy use calculated for? This affects what weather is assumed, which has been calculated for each year range based on climate models in order to include the affects of global warming.</div>
+        <div id="yearRangeButtons"></div>
+        <!-- <div id="dropdownContainer"> -->
+            <!-- Dropdown pairs will be appended here -->
+        <!-- </div> -->
+        
+        <!-- <button id="addDropdownButton">Add Feature</button> -->
+    <!-- </br>
+    </br> -->
+        <!-- <div id="featuredescription"></div> -->
+        
+        <script>
             function findFirstDescendant(parentclass, doc, tagname) {
                 parent = doc.getElementsByClassName(parentclass)[0];
                 var descendants = parent.getElementsByTagName(tagname);
@@ -101,26 +120,13 @@
             // if (checkExist) {
                 
             // }
-        // var row = document.getElementsByClassName('leaflet-interactive')
-        // for (let i = 0; i < row.length; i++) {
-        //     row[i].addEventListener('click',writeRegion);
-        // }
-        // row.addEventListener('click',writeRegion)
+            // var row = document.getElementsByClassName('leaflet-interactive')
+            // for (let i = 0; i < row.length; i++) {
+            //     row[i].addEventListener('click',writeRegion);
+            // }
+            // row.addEventListener('click',writeRegion)
 
-        </script>
-        <div id="yearRangeButtons">
-            <!-- Dropdown pairs will be appended here -->
-        </div>
-        <div id="dropdownContainer">
-            <!-- Dropdown pairs will be appended here -->
-        </div>
-        
-        <button id="addDropdownButton">Add Feature</button>
-    <!-- </br>
-    </br> -->
-        <div id="featuredescription"></div>
-        
-        <script>
+
             const dropdownContainer = document.getElementById('dropdownContainer');
             const addDropdownButton = document.getElementById('addDropdownButton');
             featuresDict = {}
@@ -158,7 +164,7 @@
             createRadioButtons('yearRangeButtons', radioOptions);
 
 
-            function createCountySelector() {
+            function createStateSelector() {
                 fetch('states.json')
                 .then((response) => response.json())
                 .then((states) => {
@@ -182,41 +188,18 @@
                 option.disabled = true
                 option.selected = true
                 stateSelect.appendChild(option);
-                for (const state in states) {
+                for (const i in states) {
                     // if (state == "AK" || state == "HI" || state == "PR"){
                     //     continue
                     // }
                     const option = document.createElement('option');
-                    option.value = states[state];
-                    option.textContent = states[state];
+                    option.value = states[i];
+                    option.textContent = states[i];
                     stateSelect.appendChild(option);
                 }
 
 
 
-                function populateCounties() {
-                    // Clear previous county options
-                    countySelect.innerHTML = '<option value="">Select a county</option>';
-
-                    // Get selected state
-                    const selectedState = stateSelect.value;
-
-                    // Enable county dropdown if a valid state is selected
-                    if (selectedState) {
-                        countySelect.disabled = false;
-
-                        // Populate county dropdown
-                        const counties = county_json[selectedState];
-                        for (const county of counties) {
-                            const option = document.createElement('option');
-                            option.value = county['gisjoin'];
-                            option.textContent = county['name'];
-                            countySelect.appendChild(option);
-                        }
-                    } else {
-                        countySelect.disabled = true;
-                    }
-                    }
                 // Event listener for state dropdown
                 // stateSelect.selectedIndex=5
                 // populateCounties()
@@ -224,10 +207,131 @@
                 // loadMap()
                 setMapPleaseSelect()
                 stateSelect.addEventListener('change', loadMap);
+                
+            })
+        }
 
-                })
-            }
+        function toClassCase(str) {
+            str = str = str.replace(/\s+/g, '-').toLowerCase();
+            return str
+        }
+        
 
+        function createFeaturesInput() {
+            fetch('features.json')
+            .then((response) => response.json())
+            .then((features) => {
+                feature_container = document.getElementById('feature-container')
+                for (const cat_name in features) {
+                    category_info = features[cat_name]
+                    cat_container = document.createElement('div');
+                    cat_container.setAttribute("class", "category-container")
+                    cat_container.setAttribute("id", toClassCase(cat_name) + "-container")
+                    feature_container.appendChild(cat_container)
+                    cat_header = document.createElement("div");
+                    cat_header.innerHTML = cat_name
+                    cat_header.setAttribute("class", "category-header")
+                    cat_header.setAttribute("id", toClassCase(cat_name) + "-header")
+                    cat_container.appendChild(cat_header)
+                    questions_container = document.createElement("div");
+                    questions_container.setAttribute("class", "questions-container")
+                    questions_container.setAttribute("id", toClassCase(cat_name) + "-questions-container")
+                    cat_container.appendChild(questions_container)
+                    for (const question_name in category_info) {
+                        question_container = document.createElement("div");
+                        question_container.setAttribute("class", "question-container")
+                        question_container.setAttribute("id", toClassCase(question_name) + "-question-container")
+                        questions_container.appendChild(question_container)
+                        question_info = category_info[question_name]
+                        question_header = document.createElement("div");
+                        question_header.innerHTML = question_name
+                        question_header.setAttribute("class", "question-header")
+                        question_header.setAttribute("id", toClassCase(question_name) + "-question-header")
+                        question_container.appendChild(question_header)
+                        input_container = document.createElement("div");
+                        input_container.setAttribute("class", "input-container")
+                        input_container.setAttribute("id", toClassCase(question_name) + "-input-container")
+                        question_container.appendChild(input_container)
+                        if (question_info["type"] == "option") {
+                            // Make radio buttons
+                            for (option_name in question_info["options"]) {
+                                radio = document.createElement('input');
+                                input_container.setAttribute("class", "radio-container")
+                                radio.type = 'radio';
+                                radio.name = question_info["feature"]; // Set a common name for the radio buttons
+                                radio.value = question_info["options"][option_name]; // Set the value for each radio button
+                                // radio.id = 'radio_' + toClassCase(option_name); // Unique ID for each radio button
+                                // radio.checked = option.checked
+                                radio.className = 'radio-feature'
+
+                                const label = document.createElement('label');
+                                label.htmlFor = radio.id;
+                                label.textContent = option_name;
+
+                                input_container.appendChild(radio);
+                                input_container.appendChild(label);
+                            }
+                            // Create "No Answer" Button at Bottom
+                            radio = document.createElement('input');
+                            input_container.setAttribute("class", "radio-container")
+                            radio.type = 'radio';
+                            radio.name = question_info["feature"]; // Set a common name for the radio buttons
+                            radio.value = "No Answer"; // Set the value for each radio button
+                            // radio.id = 'radio_' + toClassCase(option_name); // Unique ID for each radio button
+                            radio.checked = true
+
+                            const label = document.createElement('label');
+                            label.htmlFor = radio.id;
+                            label.textContent = "No Answer";
+
+                            input_container.appendChild(radio);
+                            input_container.appendChild(label);
+                        } else if (question_info["type"] == "input") {
+                            // Make text input field
+                            input_container.setAttribute("class", "textbox-container")
+                            field = document.createElement('input');
+                            field.className = 'text-feature'
+                            units = document.createElement('div')
+                            field.name=question_info["feature"]
+                            units.innerHTML = question_info["units"]
+                            input_container.appendChild(field);
+                            input_container.appendChild(units);
+                            // featurevalueInput.className = 'feature-value'
+                            // featurevalueSelect.replaceWith(featurevalueInput)
+                            // description.innerHTML = feat_json[selectedFeature]['field_description']
+                        }
+                    }
+
+
+
+                }
+            
+            })
+        }
+        
+            // function populateCounties() {
+            //     // Clear previous county options
+            //     countySelect.innerHTML = '<option value="">Select a county</option>';
+
+            //     // Get selected state
+            //     const selectedState = stateSelect.value;
+
+            //     // Enable county dropdown if a valid state is selected
+            //     if (selectedState) {
+            //         countySelect.disabled = false;
+
+            //         // Populate county dropdown
+            //         const counties = county_json[selectedState];
+            //         for (const county of counties) {
+            //             const option = document.createElement('option');
+            //             option.value = county['gisjoin'];
+            //             option.textContent = county['name'];
+            //             countySelect.appendChild(option);
+            //         }
+            //     } else {
+            //         countySelect.disabled = true;
+            //     }
+            // }
             function createDropdownPair() {
                 fetch('data_dictionary.json')
                 .then((response) => response.json())
@@ -309,12 +413,13 @@
             //     createDropdownPair();
             // }
 
-            createCountySelector();
+            createStateSelector();
+            createFeaturesInput();
             // Initial dropdown pair
-            createDropdownPair();
+            // createDropdownPair();
 
             // Add new dropdown pair when button is clicked
-            addDropdownButton.addEventListener('click', createDropdownPair);
+            // addDropdownButton.addEventListener('click', createDropdownPair);
 
             function getFeatureDict() {
                 // county = document.getElementById('county-select').value
@@ -331,14 +436,29 @@
                     return false;
                 }
                 featDict = {"geoid": geoid, "year_range": year_range, "num_samples": 50}
-                for (let i = 0; i < dropdownContainer.children.length; i++) {
-                    const pair = dropdownContainer.children[i];
-                    const feature = pair.getElementsByClassName('feature-select')[0].value
-                    const featureValue = pair.getElementsByClassName('feature-value')[0].value
-                    if (featureValue != "") {
-                        featDict[feature] = featureValue
+                var radios = document.getElementsByClassName('radio-feature');
+                for( i = 0; i < radios.length; i++ ) {
+                    if( radios[i].checked && radios[i].value != "No Answer") {
+                        featDict[radios[i].name] = radios[i].value
+                        // return radios[i].value;
                     }
                 }
+                // TODO: validate input
+                var text_features = document.getElementsByClassName('text-feature');
+                for( i = 0; i < text_features.length; i++ ) {
+                    if( text_features[i].value != "") {
+                        featDict[text_features[i].name] = text_features[i].value
+                        // return radios[i].value;
+                    }
+                }
+                // for (let i = 0; i < dropdownContainer.children.length; i++) {
+                //     const pair = dropdownContainer.children[i];
+                //     const feature = pair.getElementsByClassName('feature-select')[0].value
+                //     const featureValue = pair.getElementsByClassName('feature-value')[0].value
+                //     if (featureValue != "") {
+                //         featDict[feature] = featureValue
+                //     }
+                // }
                 console.log(featDict);
                 return featDict
             }

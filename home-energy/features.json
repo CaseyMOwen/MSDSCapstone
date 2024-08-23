@@ -1,0 +1,214 @@
+{
+    "HVAC" :
+    {
+        "Type of Heating System":
+        {
+            "type":"option",
+            "feature":"in.hvac_heating_type",
+            "options":
+            {
+                "Heat Pump with Ducts":"Ducted Heat Pump",
+                "Heat Pump Without Ducts (i.e. mini splits)": "Non-Ducted Heat Pump",
+                "No Heat Pump, With Ducts (i.e. furnace)":"Ducted Heating",
+                "No Heat Pump, No Ducts (i.e. baseboard heaters)":"Non-Ducted Heating",
+                "No Heating":"None"
+            },
+            "units":"n/a"
+        },
+        "Primary Fuel Used for Heating":
+        {
+            "type":"option",
+            "feature":"in.heating_fuel",
+            "options":
+            {
+                "Natural Gas":"Natural Gas",
+                "Fuel Oil":"Fuel Oil",
+                "Electricity": "Electricity",
+                "Propane":"Propane",
+                "Other Fuel":"Other Fuel",
+                "No Heating":"None"
+            },
+            "units":"n/a"
+        },
+        "Type of Cooling System":
+        {
+            "type":"option",
+            "feature":"in.hvac_cooling_type",
+            "options":
+            {
+                "Ducted Central Air Conditioning": "Central AC",
+                "Heat Pump":"Heat Pump",
+                "Room/Window Air Conditioners":"Room AC",
+                "No Cooling":"None"
+            },
+            "units":"n/a"
+        },
+        "Portion of Home that has Cooling (%)":
+        {
+            "type":"input",
+            "feature":"in.hvac_cooling_partial_space_conditioning",
+            "options":"n/a",
+            "units":"%"
+        },
+        "Typical Heating Setpoint (Winter)":
+        {
+            "type":"input",
+            "feature":"in.heating_setpoint",
+            "options":"n/a",
+            "units":"°F"
+        },
+        "Typical Cooling Setpoint (Summer)":
+        {
+            "type":"input",
+            "feature":"in.cooling_setpoint",
+            "options":"n/a",
+            "units":"°F"
+        }
+    },
+    "Appliances" :
+    {
+        "Type of Clothes Dryer":
+        {
+            "type":"option",
+            "feature":"in.clothes_dryer",
+            "options":
+            {
+                "Electric":"Electric",
+                "Gas":"Gas",
+                "Propane":"Propane",
+                "Do Not Own":"None"
+            },
+            "units":"n/a"
+        },
+        "Type of Water Heater":
+        {
+            "type":"option",
+            "feature":"in.water_heater_fuel",
+            "options":
+            {
+                "Electric":"Electricity",
+                "Natural Gas":"Natural Gas",
+                "Propane":"Propane",
+                "Fuel Oil":"Fuel Oil",
+                "Other Fuel":"Other Fuel"
+            },
+            "units":"n/a"
+        },
+        "Type of Cooking Range":
+        {
+            "type":"option",
+            "feature":"in.cooking_range",
+            "options":
+            {
+                "Electric Induction":"Electric Induction",
+                "Electric Resistance":"Electric Resistance",
+                "Natural Gas":"Gas",
+                "Propane":"Propane",
+                "Do Not Own":"None"
+            },
+            "units":"n/a"
+        },
+        "Do You Own a Clothes Washer?":
+        {
+            "type":"option",
+            "feature":"in.clothes_washer_presence",
+            "options":
+            {
+                "Yes":"Yes",
+                "No":"None"
+            },
+            "units":"n/a"
+        },
+        "Do You Use More Than One Refrigerator?":
+        {
+            "type":"option",
+            "feature":"in.misc_extra_refrigerator",
+            "options":
+            {
+                "Yes":"EF 17.6",
+                "No":"None"
+            },
+            "units":"n/a"
+        },
+        "Do You Use a Standalone Freezer?":
+        {
+            "type":"option",
+            "feature":"in.misc_freezer",
+            "options":
+            {
+                "Yes":"EF 12, National Average",
+                "No":"None"
+            },
+            "units":"n/a"
+        }
+    },
+    "House" :
+    {
+        "# of Bedrooms":
+        {
+            "type":"input",
+            "feature":"in.bedrooms",
+            "options":"n/a",
+            "units":""
+        },
+        "# of Stories":
+        {
+            "type":"input",
+            "feature":"in.geometry_stories_low_rise",
+            "options":"n/a",
+            "units":""
+        },
+        "Total Floor Area":
+        {
+            "type":"input",
+            "feature":"in.geometry_floor_area",
+            "options":"n/a",
+            "units":"square feet"
+        },
+        "# Of Occupants":
+        {
+            "type":"input",
+            "feature":"in.occupants",
+            "options":"n/a",
+            "units":""
+        },
+        "Who is the House Occupied By?":
+        {
+            "type":"option",
+            "feature":"in.tenure",
+            "options":
+            {
+                "Owner":"Owner",
+                "Renter":"Renter"
+            },
+            "units":"n/a"
+        },
+        "What Type of Attic Does the House Have?":
+        {
+            "type":"option",
+            "feature":"in.geometry_attic_type",
+            "options":
+            {
+                "No Attic":"None",
+                "Finished Attic":"Finished Attic or Cathedral Ceilings",
+                "Unfinished, Unvennted Attic": "Unvented Attic",
+                "Unfinished, Vented Attic": "Vented Attic"
+            },
+            "units":"n/a"
+        },
+        "What Type of Garage Does the House Have?":
+        {
+            "type":"option",
+            "feature":"in.geometry_garage",
+            "options":
+            {
+                "No Garage":"None",
+                "1 Car Garage":"1 Car",
+                "2 Car Garage":"2 Car",
+                "3 Car Garage":"3 Car"
+            },
+            "units":"n/a"
+        }
+    }
+
+}
