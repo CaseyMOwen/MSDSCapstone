@@ -6,12 +6,12 @@ import xgboost as xgb
 import os
 import pickle
 import time
-from urllib.parse import quote_plus
-from sqlalchemy.engine import create_engine
+# from urllib.parse import quote_plus
+# from sqlalchemy.engine import create_engine
 import pandas as pd
 # from config import Aws as aws
-from pyathena import connect
-from pyathena.pandas.cursor import PandasCursor
+# from pyathena import connect
+# from pyathena.pandas.cursor import PandasCursor
 import pipelineclasses as pc
 import numpy as np
 import polars as pl
@@ -171,8 +171,6 @@ def predict(X:pl.DataFrame):
     dmatrix = xgb.DMatrix(X)
     return booster.predict(dmatrix)
 
-
-
 def to_underscore_case(s):
     # Replace '::' with '/'
     s = s.replace('::', '/')
@@ -204,7 +202,7 @@ def generate_sample(feats:dict={'geoid':'0900306'}, num_samples:int=100):
     del feats["geoid"]
     feats["in.county_and_puma"] = county_and_puma
     
-    dep_df = pd.read_csv('dependecies_list.csv')
+    dep_df = pd.read_csv('dependencies.csv')
     column_plan_df = pd.read_csv('column_plan.csv', usecols=['field_name','keep_for_model'])
     # List of columns that the model requires as inputs
     needed_und_cols = column_plan_df.loc[
@@ -303,7 +301,7 @@ def add_col_to_sample(sample_df: pl.DataFrame, cap_field: str, cap_dependencies:
         .join(char_df, how='left', left_on=to_underscore_case(cap_dependencies[0]), right_on='Dependency=' + cap_dependencies[0], coalesce=False)
         # Further filter on all remaining dependencies - ideally would have joined on all dependencies but not implemented in polars. Equivalent to cross product and filter by multiple columns.
         .filter(
-            # Pl.col(d) is the sample_df column, "Dependecy=" is the char_df column" - all dependencies must match exactly
+            # Pl.col(d) is the sample_df column, "Dependency=" is the char_df column" - all dependencies must match exactly
             pl.all_horizontal(
                 pl.col(to_underscore_case(d)) == pl.col('Dependency=' + d) for d in cap_dependencies
             )
@@ -327,7 +325,7 @@ def add_col_to_sample(sample_df: pl.DataFrame, cap_field: str, cap_dependencies:
         )
         # Join back up with unique samples df version where dependencies match, so we now have a list of choices at each sample(row)
         .join(sample_df_with_deps, how='inner', on="deps_str", suffix="_sample", coalesce=True)
-        # Create an index list column where there are several runs of 0-number of occurences of that dep combo, restarting for each group. Goal is to choose one of every option generated
+        # Create an index list column where there are several runs of 0 to number of occurences of that dep combo, restarting for each group. Goal is to choose one of every option generated
         .with_columns(options_idx=pl.int_range(pl.len()).over("deps_str"))
         .with_columns(sample=pl.col("choices").list.get(pl.col("options_idx")))
         .rename({'sample': to_underscore_case(cap_field)})

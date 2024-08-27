@@ -3,5 +3,6 @@
 /.venv
 /Data
 *config.*
-/HPC/Jobs
+/Training/Jobs
 *.~lock.*
+/Data/PUMA_2010
