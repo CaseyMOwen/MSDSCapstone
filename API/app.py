@@ -37,10 +37,11 @@ def predict_endpoint():
         del feats["num_samples"]
     else:
         num_samples = 100
-    X, state, gisjoin = generate_sample(feats, num_samples)
+    X_2022, state, gisjoin = generate_sample(feats, num_samples, release="2022_1")
+    X_2024, state, gisjoin = generate_sample(feats, num_samples, release="2024_1")
     step1 = time.time()
     print(feats)
-    X = transform_sample(X.to_pandas(), year_range, state, gisjoin)
+    X = transform_sample(X_2024.to_pandas(), year_range, state, gisjoin)
     step2 = time.time()
     predictions = predict(X)
     stop = time.time()
@@ -189,7 +190,7 @@ def to_underscore_case(s):
 
 # Feats is dictionary with unserscore case field names, and value as value
 
-def generate_sample(feats:dict={'geoid':'0900306'}, num_samples:int=100):
+def generate_sample(feats:dict={'geoid':'0900306'}, num_samples:int=100, release:str="2024_1"):
 # For each row in dependencies list - check if we have what we need for this column, and if we need it. If so, add a column to the samples df, each of correct distribution according to the existing row
     feats.pop("year_range")
     if not "geoid" in feats:
@@ -239,7 +240,7 @@ def generate_sample(feats:dict={'geoid':'0900306'}, num_samples:int=100):
                 needed_cap_cols.update(set(dependencies) - known_cap_cols)
                 continue
             else: #All dependencies are already in sample_df
-                sample_df = add_col_to_sample(sample_df, field, dependencies, num_samples)
+                sample_df = add_col_to_sample(sample_df, field, dependencies, num_samples, release)
                 needed_cap_cols.remove(field)
                 known_cap_cols.add(field)
         if iter > 500:
@@ -266,8 +267,8 @@ def clean_sample(sample_df: pl.DataFrame, model_cols:list[str]) -> pl.DataFrame:
     return cleaned_df.collect()
 
 
-def add_col_to_sample(sample_df: pl.DataFrame, cap_field: str, cap_dependencies: list[str], num_points: int):
-    directory = 'appfiles/housing_characteristics'
+def add_col_to_sample(sample_df: pl.DataFrame, cap_field: str, cap_dependencies: list[str], num_points: int, release:str="2024_1"):
+    directory = 'appfiles/housing_characteristics/' + release
     char_df = pl.scan_parquet(directory + '/' + cap_field + '.parquet')
     options = [col.split('Option=')[1] for col in char_df.columns if col.startswith('Option=')]
 

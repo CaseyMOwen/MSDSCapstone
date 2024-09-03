@@ -4,43 +4,64 @@ import category_encoders as ce
 from sklearn.compose import ColumnTransformer
 
 class Preprocessing():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, version="2024_1") -> None:
+        self.version = version
 
     def fit(self, X, y):
         # self.column_plan_df = pd.read_csv('column_plan.csv', usecols=['field_name','keep_for_model'])
         pass
 
 
-    def transform(self, X):
+    def transform(self, X:pd.DataFrame) -> pd.DataFrame:
+        if self.version == "2022_1":
+            X = self.split_columns_2022_1(X)
+        X = self.drop_ignored_columns(X)
         X = self.split_columns(X)
+            
         # X = self.convert_categorical(X)
         return X
     
     def fit_transform(self, X, y):
         self.fit(X, y)
         return self.transform(X)
-    '''
+    
     def drop_ignored_columns(self, X: pd.DataFrame):
-        # column_plan_df = pd.read_csv('column_plan.csv')
-        to_drop = []
-        for index, row in self.column_plan_df.iterrows():
-            field = row['field_name']
-            keep = row['keep_for_model']
-            if keep == "No" and field in X:
-                to_drop.append(field)
-        X = X.drop(columns=to_drop)
+        column_plan_df = pd.read_csv('column_plan.csv', usecols=['field_name','keep_for_model'])
+        # These are the columns to keep before doing all splitting
+        in_cols = column_plan_df.loc[
+            (column_plan_df['keep_for_model'] == 'Yes') | 
+            (column_plan_df['keep_for_model'] == 'Split')
+        ]['field_name'].to_list()
+
+        if self.version == "2022_1":
+            in_cols.remove('in.duct_location')
+            in_cols.remove('in.household_has_tribal_persons')
+        X = X.drop(columns=list(set(X.columns.to_list()) - set(in_cols)))
+        # print(X.columns)
+        # X = X[in_cols]
         return X
-    '''
+    
     def str_to_int(self, text:str):
         if text == "None":
             return 0
         else:
             return int(text)
+        
+    # 2024 added a few complexities to the dataset, as well as some renamed things, but the generated sample for prediction is based on the 2024 schema. Need to make the conversions here
+    # def convert_2024_to_2022(self, X:pd.DataFrame):
 
+    #     # 2022 does not have this info
+    #     X = X.drop(columns=['in.duct_location', 'in.household_has_tribal_persons'])
+    #     # 2024 supports efficiencies of 21.9 but 2022 only goes as high as 19.9
+    #     X['in.refrigerator'] = X['in.refrigerator'].map({"EF 21.9" : "EF 19.9"})
+
+    #     return X
+
+    # Splitting that happends for all versions
     def split_columns(self, X:pd.DataFrame):
         # Split possible outcomes by comma, leakage and insulation are two features
         to_drop = []
+        # print(X.columns)
         X[['in.duct_leakage','in.duct_insulation']] = X['in.duct_leakage_and_insulation'].str.split(', ',expand=True)
         X['in.duct_insulation'] = X['in.duct_insulation'].fillna('None')
 
@@ -76,6 +97,32 @@ class Preprocessing():
         X = X.drop(columns=to_drop)
         return X
 
+    # When possible, it is good to force 2022 columns to look like the 2024 counterparts
+    def split_columns_2022_1(self, X:pd.DataFrame):
+        # Split possible outcomes by comma, leakage and insulation are two features
+        # to_drop = []
+
+        X['in.clothes_washer'] = X['in.clothes_washer'].str.split(', ',expand=True)[0]
+        X['in.clothes_washer_usage_level'] = X['in.usage_level'].map({"Low" : "80% Usage", "Medium":"100% Usage", "High":"120% Usage"})
+
+        X['in.clothes_dryer'] = X['in.clothes_dryer'].str.split(', ',expand=True)[0]
+        X['in.clothes_dryer_usage_level'] = X['in.usage_level'].map({"Low" : "80% Usage", "Medium":"100% Usage", "High":"120% Usage"})
+
+        X['in.cooking_range'] = X['in.cooking_range'].str.split(', ',expand=True)[0]
+        # 2022 model does not have support for differentiation between Induction and Electric Resistance, so simply assume everyone has Electric Resistance - I am assuming that is how the simulation was run. Website will not be able to capture any differences on 2022 measures on this feature
+        # No longer need, since generating directly from 2022 distributions
+        # X['in.cooking_range'] = X['in.cooking_range'].map({"Electric" : "Electric Resistance"})
+
+        X['in.cooking_range_usage_level'] = X['in.usage_level'].map({"Low" : "80% Usage", "Medium":"100% Usage", "High":"120% Usage"})
+
+        # 2024 also has an EF 21.9 option - should not affect model
+        X['in.refrigerator'] = X['in.refrigerator'].str.split(', ',expand=True)[0]
+        X['in.refrigerator_usage_level'] = X['in.usage_level'].map({"Low" : "95% Usage", "Medium":"100% Usage", "High":"105% Usage"})
+
+        X = X.rename(columns={'in.ducts':"in.duct_leakage_and_insulation"})
+        # X = X.drop(columns=to_drop)
+        return X
+        # X = X.drop(columns=['in.duct_leakage_and_insulation'])
     '''
     def convert_categorical(self, X: pd.DataFrame):
         category_cols = X.select_dtypes(exclude=np.number).columns.tolist()
@@ -96,8 +143,8 @@ class Preprocessing():
     #     return X
     
 class Encoding():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, version="2024_1") -> None:
+        self.version = version
 
     def fit(self, X, y):
         self.column_plan_df = pd.read_csv('column_plan.csv').filter(['field_name','encoder', 'label_encoder_dict'])
@@ -168,6 +215,9 @@ class Encoding():
         # Binary
         binary_fields = self.column_plan_df[self.column_plan_df['encoder'] == 'Binary']['field_name'].to_list()
         binary_fields += custom_binary_cols
+        if self.version == "2022_1":
+            binary_fields.remove('in.duct_location')
+            binary_fields.remove('in.household_has_tribal_persons')
         binary_encoder = ce.BinaryEncoder(cols=binary_fields, drop_invariant=True)
 
         # Ordinal
@@ -239,4 +289,8 @@ class AddWeatherData():
     
     def set_params(self, **parameters):
         for key, value in parameters.items():
+            # print(f'key: {key}, value: {value}')
+            # step_key, delim, sub_key = key.partition("__")
             self.params[key] = value
+            # print(f'Setting param {sub_key} to be value {value}')
+        print(f'params after setting: {self.params}')
