@@ -6,6 +6,7 @@ import xgboost as xgb
 import os
 import pickle
 import time
+from sklearn.pipeline import Pipeline
 # from urllib.parse import quote_plus
 # from sqlalchemy.engine import create_engine
 import pandas as pd
@@ -31,25 +32,45 @@ def predict_endpoint():
     # X = sample_home(feats, 100)
     # state = feats["in.state"]
     # gisjoin = feats["in.county_and_puma"].split(", ")[0]
-    year_range = feats["year_range"]
+    year_range = feats.pop("year_range")
     if "num_samples" in feats:
-        num_samples = feats["num_samples"]
-        del feats["num_samples"]
+        num_samples = feats.pop("num_samples")
     else:
         num_samples = 100
+    feats = lookup_county_puma(feats)
     X_2022, state, gisjoin = generate_sample(feats, num_samples, release="2022_1")
-    X_2024, state, gisjoin = generate_sample(feats, num_samples, release="2024_1")
     step1 = time.time()
-    print(feats)
-    X = transform_sample(X_2024.to_pandas(), year_range, state, gisjoin)
+    X_2024, state, gisjoin = generate_sample(feats, num_samples, release="2024_1")
     step2 = time.time()
-    predictions = predict(X)
+    X_2022_df, X_2024_df = X_2022.to_pandas(), X_2024.to_pandas()
+    print(feats)
+
+    preds_dict = {}
+    # TODO: possible read files in parallel, then make predictions on loaded objects
+    for measure_folder in os.scandir('appfiles/models'):
+        # print(subfolder)
+        measure_name = measure_folder.name
+        for model_folder in os.scandir(measure_folder):
+            model_type = model_folder.name
+            # print(measure_name)
+            with open(model_folder.path + '/pipeline.pkl', 'rb') as f:
+                pipeline = pickle.load(f)
+            with open(model_folder.path + '/xgb_model.pkl', 'rb') as f:
+                booster = pickle.load(f)
+            if measure_name.startswith('2024_1'):
+                X = X_2024_df
+            elif measure_name.startswith('2022_1'):
+                X = X_2022_df
+            predictions = get_predictions(X, booster, pipeline, year_range, state, gisjoin)
+            preds_dict[measure_name + '_' + model_type] = predictions.tolist()
     stop = time.time()
-    print(f"Generate: {step1 - start}")
-    print(f"Transform: {step2 - step1}")
-    print(f"Predict: {stop - step2}")
-    print(f"Total Time: {stop - start}")
-    return jsonify(predictions.tolist())
+    print(f'Generate 2022 Samples: {step1 - start}')
+    print(f'Generate 2024 Samples: {step2 - step1}')
+    print(f'Make predictions: {stop - step2}')
+    print(f'Total: {stop - start}')
+
+
+    return jsonify(preds_dict)
 
 '''
 def create_athena_connection():
@@ -147,6 +168,19 @@ def sample_home(feats: dict, n_homes:int):
     print(f'\tPipeline Transform: {stop - step4}')
     return X_transformed
 '''
+
+def get_predictions(X_sampled: pd.DataFrame, booster:xgb.Booster, pipeline: Pipeline, year_range:str, state:str, gisjoin:str):
+    # with open('appfiles/pipeline_cold.pkl', 'rb') as f:
+    #     pipeline = pickle.load(f)
+    pipeline.set_params(addweather__year_range=year_range, addweather__state=state, addweather__gisjoin=gisjoin)
+    X_transformed = pipeline.transform(X_sampled)
+    # with open('appfiles/models/xgb_model_cold_baseline.pkl', 'rb') as f:
+    #     booster = pickle.load(f)
+    # booster.load_model('appfiles/models/xgb_pca_model_baseline.json')
+    dmatrix = xgb.DMatrix(X_transformed)
+    return booster.predict(dmatrix)
+
+'''
 def transform_sample(X_sampled, year_range:str, state:str, gisjoin:str):
     with open('appfiles/pipeline_cold.pkl', 'rb') as f:
         pipeline = pickle.load(f)
@@ -171,7 +205,7 @@ def predict(X:pl.DataFrame):
     # booster.load_model('appfiles/models/xgb_pca_model_baseline.json')
     dmatrix = xgb.DMatrix(X)
     return booster.predict(dmatrix)
-
+'''
 def to_underscore_case(s):
     # Replace '::' with '/'
     s = s.replace('::', '/')
@@ -190,31 +224,49 @@ def to_underscore_case(s):
 
 # Feats is dictionary with unserscore case field names, and value as value
 
-def generate_sample(feats:dict={'geoid':'0900306'}, num_samples:int=100, release:str="2024_1"):
-# For each row in dependencies list - check if we have what we need for this column, and if we need it. If so, add a column to the samples df, each of correct distribution according to the existing row
-    feats.pop("year_range")
+def lookup_county_puma(feats:dict):
+    '''
+    Replaces geoid with county and puma in feats dict
+    '''
     if not "geoid" in feats:
         raise ValueError("feats must include at least geoid as a key")
     
     with open('geoid_lookup.json') as json_file:
         geoid_lookup = json.load(json_file)
 
-    county_and_puma = geoid_lookup[feats["geoid"]]
-    del feats["geoid"]
+    geoid = feats.pop('geoid')
+    county_and_puma = geoid_lookup[geoid]
+    # del feats["geoid"]
     feats["in.county_and_puma"] = county_and_puma
-    
-    dep_df = pd.read_csv('dependencies.csv')
+    return feats
+
+
+def generate_sample(feats:dict, num_samples:int=100, release:str="2024_1"):
+# For each row in dependencies list - check if we have what we need for this column, and if we need it. If so, add a column to the samples df, each of correct distribution according to the existing row
+    dep_df = pd.read_csv('appfiles/schema/' + release + '_dependencies.csv')
     column_plan_df = pd.read_csv('column_plan.csv', usecols=['field_name','keep_for_model'])
     # List of columns that the model requires as inputs
     needed_und_cols = column_plan_df.loc[
         (column_plan_df['keep_for_model'] == 'Yes') | 
         (column_plan_df['keep_for_model'] == 'Split')
     ]['field_name'].to_list()
+
+    if release == "2022_1":
+        needed_und_cols.remove('in.duct_location')
+        needed_und_cols.remove('in.household_has_tribal_persons')
+        needed_und_cols.remove('in.clothes_washer_usage_level')
+        needed_und_cols.remove('in.clothes_dryer_usage_level')
+        needed_und_cols.remove('in.cooking_range_usage_level')
+        needed_und_cols.remove('in.refrigerator_usage_level')
+        needed_und_cols.remove('in.duct_leakage_and_insulation')
+        needed_und_cols.append('in.ducts')
+
     needed_und_cols.append("in.county_and_puma")
     # Initialize with known parameters
     sample_df_dict = {'bldg_id': list(range(num_samples))}
     for key in feats:
         sample_df_dict[key] = [feats[key]]*num_samples
+        # print(f'removing key: {key}')
         needed_und_cols.remove(key)
     
     sample_df = pl.DataFrame(sample_df_dict)
