@@ -1,13 +1,27 @@
+
+
 document.getElementById('postButton').addEventListener('click', () => {
     featdict = getFeatureDict()
     if (featdict != false) {
-        document.getElementById('25th Percentile').innerHTML = "Loading..."
+        document.getElementById('results-wrapper').innerHTML = "Loading..."
         getSavings(featdict)
         .then(data => {
+            document.getElementById('results-wrapper').innerHTML = ""
+
             console.log(data); // JSON data parsed by `response.json()` call
-            document.getElementById('25th Percentile').innerHTML = "First Quartile: " + quantile(data, .25).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
-            document.getElementById('Median').innerHTML = "Median: " + quantile(data, .50).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
-            document.getElementById('75th Percentile').innerHTML = "75th Percentile: " + quantile(data, .75).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
+            const results_wrapper = document.getElementById('results-wrapper')
+            for (const key in data) {
+                measure_results = document.createElement('div')
+                measure_results.setAttribute("class", "measure-results")
+                measure_results.setAttribute("id", key + "-measure-results")
+                measure_results.innerHTML = "Median for measure " + key + ": " + quantile(data[key], .50).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
+                
+                results_wrapper.appendChild(measure_results)
+
+            }
+            // document.getElementById('25th Percentile').innerHTML = "First Quartile: " + quantile(data, .25).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
+            // document.getElementById('Median').innerHTML = "Median: " + quantile(data, .50).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
+            // document.getElementById('75th Percentile').innerHTML = "75th Percentile: " + quantile(data, .75).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
         })
         .catch(error => {
             console.error('There was a problem with the fetch operation:', error);
@@ -17,8 +31,8 @@ document.getElementById('postButton').addEventListener('click', () => {
 
   function getSavings(featdict={}) {
         
-    return fetch("https://msdscapstone-33o5dpumiq-uc.a.run.app/predict", {
-    // return fetch("http://localhost:9090/predict", {
+    // return fetch("https://msdscapstone-33o5dpumiq-uc.a.run.app/predict", {
+    return fetch("http://localhost:9090/predict", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

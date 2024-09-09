@@ -31,12 +31,12 @@ output = 'out.site_energy.total.energy_consumption.kwh'
 output = 'out.electricity.total.energy_consumption.kwh.savings'
 output = 'out.site_energy.total.energy_consumption.kwh.savings'
 '''
-outputs_dict = {
-    "Baseline": {
-        'electricity':'out.electricity.total.energy_consumption.kwh', 'total':'out.site_energy.total.energy_consumption.kwh'},
-    "Measure": {
-        'electricity':'out.electricity.total.energy_consumption.kwh.savings', 'total':'out.site_energy.total.energy_consumption.kwh.savings'} 
-}
+# outputs_dict = {
+#     "Baseline": {
+#         'electricity':'out.electricity.total.energy_consumption.kwh', 'total':'out.site_energy.total.energy_consumption.kwh'},
+#     "Measure": {
+#         'electricity':'out.electricity.total.energy_consumption.kwh.savings', 'total':'out.site_energy.total.energy_consumption.kwh.savings'} 
+# }
 
 measures_df = pd.read_csv('measures.csv')
 # column_plan_df = pd.read_csv('column_plan.csv',usecols=['field_name', 'keep_for_model'])
@@ -45,7 +45,7 @@ measures_df = pd.read_csv('measures.csv')
 #     (column_plan_df['keep_for_model'] == 'Split')
 # ]['field_name'].to_list()
 
-job_path = 'Jobs/' + datetime.today().strftime('%Y-%m-%d') + '_train_all'
+job_path = 'Jobs/' + datetime.today().strftime('%Y-%m-%d') + '_train_all_test'
 Path(job_path).mkdir(parents=True, exist_ok=True)
 
 def trainModel(df, output_col:str, job_folder:str, n_iter:int, measure_code:str, version:str):
@@ -136,24 +136,35 @@ def trainModel(df, output_col:str, job_folder:str, n_iter:int, measure_code:str,
 
 for i, row in measures_df.iterrows():
     if row['name'] == "Baseline":
-        measure_type = 'Baseline'
+        # measure_type = 'Baseline'
+        # The column names are slightly different depending on if it is the baseline or a measure
+        elec_col = 'out.electricity.total.energy_consumption.kwh'
+        total_col = 'out.site_energy.total.energy_consumption.kwh'
+        other_fuel_col = 'out.other_fuel.total.energy_consumption.kwh'
     else:
-        measure_type = "Measure"
+        # measure_type = "Measure"
+        elec_col = 'out.electricity.total.energy_consumption.kwh.savings'
+        total_col = 'out.site_energy.total.energy_consumption.kwh.savings'
+        other_fuel_col = 'out.other_fuel.total.energy_consumption.kwh.savings'
     print('Loading Dataset...')
     start = time.time()
     df = pd.read_parquet(row['parquet_url'], engine='pyarrow')
     # df = pd.read_csv(row['csv_url'], nrows=100)
     stop = time.time()
     print(f'Dataset Loaded in {stop - start}s')
-    # df = df.head(100)
-    for output_type in outputs_dict[measure_type]:
+    df = df.head(100)
+
+    # Create new column representing all non-electricity use in kwh
+    df[other_fuel_col] = df[total_col] - df[elec_col]
+    output_cols = {"electricity": elec_col, "other_fuel": other_fuel_col}
+    for output_type in output_cols:
         measure_code = row['folder_name']
         print(f'Training model {measure_code} with output type {output_type}')
         measure_folder = os.path.join(job_path, measure_code)
         Path(measure_folder).mkdir(parents=True, exist_ok=True)
         job_folder = os.path.join(measure_folder, output_type)
         Path(job_folder).mkdir(parents=True, exist_ok=True)
-        trainModel(df, outputs_dict[measure_type][output_type], job_folder, 50, measure_code, row["resstock_version"])
+        trainModel(df, output_cols[output_type], job_folder, 50, measure_code, row["resstock_version"])
 
 '''
 # Run extrapolation study on selected models

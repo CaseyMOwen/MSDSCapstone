@@ -64,6 +64,11 @@ def predict_endpoint():
             predictions = get_predictions(X, booster, pipeline, year_range, state, gisjoin)
             preds_dict[measure_name + '_' + model_type] = predictions.tolist()
     stop = time.time()
+    measures_df = pd.read_csv('measures.csv')
+    for model in preds_dict:
+        # Subtract electricity off of total and turn into fuel
+        # Better - train new model on the difference of the columns, and call it "other fuel"
+        pass
     print(f'Generate 2022 Samples: {step1 - start}')
     print(f'Generate 2024 Samples: {step2 - step1}')
     print(f'Make predictions: {stop - step2}')
