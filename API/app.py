@@ -45,11 +45,17 @@ def predict_endpoint():
     X_2022_df, X_2024_df = X_2022.to_pandas(), X_2024.to_pandas()
     print(feats)
 
-    preds_dict = {}
+    output = {}
     # TODO: possible read files in parallel, then make predictions on loaded objects
+    measures_df = pd.read_csv('measures.csv')
     for measure_folder in os.scandir('appfiles/models'):
         # print(subfolder)
         measure_name = measure_folder.name
+        measure_row = measures_df[measures_df['folder_name'] == measure_name].to_dict('records')[0]
+        output[measure_name] = {}
+        output[measure_name]['name'] = measure_row['name']
+        output[measure_name]['id'] = measure_row['measure_id']
+        output[measure_name]['description'] = measure_row['description']
         for model_folder in os.scandir(measure_folder):
             model_type = model_folder.name
             # print(measure_name)
@@ -62,20 +68,19 @@ def predict_endpoint():
             elif measure_name.startswith('2022_1'):
                 X = X_2022_df
             predictions = get_predictions(X, booster, pipeline, year_range, state, gisjoin)
-            preds_dict[measure_name + '_' + model_type] = predictions.tolist()
+            output[measure_name][model_type] = predictions.tolist()
     stop = time.time()
-    measures_df = pd.read_csv('measures.csv')
-    for model in preds_dict:
+    # for model in preds_dict:
         # Subtract electricity off of total and turn into fuel
         # Better - train new model on the difference of the columns, and call it "other fuel"
-        pass
+        # pass
     print(f'Generate 2022 Samples: {step1 - start}')
     print(f'Generate 2024 Samples: {step2 - step1}')
     print(f'Make predictions: {stop - step2}')
     print(f'Total: {stop - start}')
 
 
-    return jsonify(preds_dict)
+    return jsonify(output)
 
 '''
 def create_athena_connection():

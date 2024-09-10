@@ -45,7 +45,7 @@ measures_df = pd.read_csv('measures.csv')
 #     (column_plan_df['keep_for_model'] == 'Split')
 # ]['field_name'].to_list()
 
-job_path = 'Jobs/' + datetime.today().strftime('%Y-%m-%d') + '_train_all_test'
+job_path = 'Jobs/' + datetime.today().strftime('%Y-%m-%d') + '_train_all'
 Path(job_path).mkdir(parents=True, exist_ok=True)
 
 def trainModel(df, output_col:str, job_folder:str, n_iter:int, measure_code:str, version:str):
@@ -152,7 +152,7 @@ for i, row in measures_df.iterrows():
     # df = pd.read_csv(row['csv_url'], nrows=100)
     stop = time.time()
     print(f'Dataset Loaded in {stop - start}s')
-    df = df.head(100)
+    # df = df.head(100)
 
     # Create new column representing all non-electricity use in kwh
     df[other_fuel_col] = df[total_col] - df[elec_col]

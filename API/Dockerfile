@@ -1,3 +1,6 @@
+# Build and run at appropriate port, cleaning previous images:
+# docker build --tag model-api-image:latest --label capstone-api ./API; docker image prune --force --filter='label=capstone-api'; PORT=8080 && docker run -p 9090:${PORT} -e PORT=${PORT} --rm --name model-api-container model-api-image
+
 # Python base image
 FROM python:3.10-bookworm
 
