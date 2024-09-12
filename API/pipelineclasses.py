@@ -28,6 +28,9 @@ class Preprocessing():
     def drop_ignored_columns(self, X: pd.DataFrame):
         column_plan_df = pd.read_csv('column_plan.csv', usecols=['field_name','keep_for_model'])
         # These are the columns to keep before doing all splitting
+        if self.version == "2024_1":
+            print(f"Top of drop: {X['in.duct_leakage_and_insulation'].unique()}")
+        print('\n')
         in_cols = column_plan_df.loc[
             (column_plan_df['keep_for_model'] == 'Yes') | 
             (column_plan_df['keep_for_model'] == 'Split')
@@ -36,9 +39,12 @@ class Preprocessing():
         if self.version == "2022_1":
             in_cols.remove('in.duct_location')
             in_cols.remove('in.household_has_tribal_persons')
+
         X = X.drop(columns=list(set(X.columns.to_list()) - set(in_cols)))
         # print(X.columns)
         # X = X[in_cols]
+
+        print('\n')
         return X
     
     def str_to_int(self, text:str):
@@ -61,7 +67,14 @@ class Preprocessing():
     def split_columns(self, X:pd.DataFrame):
         # Split possible outcomes by comma, leakage and insulation are two features
         to_drop = []
-        # print(X.columns)
+        # unique_dict = {}
+        # for col in X.columns:
+        #     unique_dict[col] = X[col].unique()
+        # print(unique_dict)
+        # print('\n------\n')
+
+
+
         X[['in.duct_leakage','in.duct_insulation']] = X['in.duct_leakage_and_insulation'].str.split(', ',expand=True)
         X['in.duct_insulation'] = X['in.duct_insulation'].fillna('None')
 
@@ -119,7 +132,11 @@ class Preprocessing():
         X['in.refrigerator'] = X['in.refrigerator'].str.split(', ',expand=True)[0]
         X['in.refrigerator_usage_level'] = X['in.usage_level'].map({"Low" : "95% Usage", "Medium":"100% Usage", "High":"105% Usage"})
 
+        # print(X['in.ducts'].unique())
+        # print('\n')
         X = X.rename(columns={'in.ducts':"in.duct_leakage_and_insulation"})
+        # print(X['in.duct_leakage_and_insulation'].unique())
+        # print('\n')
         # X = X.drop(columns=to_drop)
         return X
         # X = X.drop(columns=['in.duct_leakage_and_insulation'])

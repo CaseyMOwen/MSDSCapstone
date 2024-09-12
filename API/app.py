@@ -17,7 +17,7 @@ import pipelineclasses as pc
 import numpy as np
 import polars as pl
 import re
-
+import copy
 
 app = Flask(__name__)
 CORS(app)
@@ -38,27 +38,39 @@ def predict_endpoint():
     else:
         num_samples = 100
     feats = lookup_county_puma(feats)
-    X_2022, state, gisjoin = generate_sample(feats, num_samples, release="2022_1")
+    feats_2022_1 = copy.deepcopy(feats)
+    # 2022 does not have support for distinguising non-ducted geat pumps from ducted heat pumps - merge both types into one "heat pump" feature
+    if "in.hvac_heating_type" in feats_2022_1 and feats_2022_1["in.hvac_heating_type"] == "Non-Ducted Heat Pump":
+        feats_2022_1["in.hvac_heating_type"] = 'Ducted Heat Pump'
+    print(feats)
+    print(feats_2022_1)
+    X_2022, state, gisjoin = generate_sample(feats_2022_1, num_samples, release="2022_1")
     step1 = time.time()
     X_2024, state, gisjoin = generate_sample(feats, num_samples, release="2024_1")
     step2 = time.time()
     X_2022_df, X_2024_df = X_2022.to_pandas(), X_2024.to_pandas()
-    print(feats)
+    print(X_2024.select('in.duct_leakage_and_insulation').head(5))
+    print(X_2024_df['in.duct_leakage_and_insulation'].head(5))
+    
 
-    output = {}
+    output = {'cost': {'electricity': .15, 'other_fuel': 1}, 'baseline': {'1980-1999': {}, '2000-2019': {}, '2020-2039': {}, '2040-2059': {}, '2060-2079': {}, '2080-2099': {}}, 'measures': {}}
     # TODO: possible read files in parallel, then make predictions on loaded objects
+    THERM_FACTOR = 0.0341214116
     measures_df = pd.read_csv('measures.csv')
     for measure_folder in os.scandir('appfiles/models'):
         # print(subfolder)
         measure_name = measure_folder.name
+        is_baseline = (measure_name == "2024_1_0")
         measure_row = measures_df[measures_df['folder_name'] == measure_name].to_dict('records')[0]
-        output[measure_name] = {}
-        output[measure_name]['name'] = measure_row['name']
-        output[measure_name]['id'] = measure_row['measure_id']
-        output[measure_name]['description'] = measure_row['description']
+        id = measure_row['measure_id']
+        if not is_baseline:
+            output['measures'][id] = {}
+            output['measures'][id]['name'] = measure_row['name']
+            output['measures'][id]['code'] = measure_name
+            output['measures'][id]['description'] = measure_row['description']
         for model_folder in os.scandir(measure_folder):
             model_type = model_folder.name
-            # print(measure_name)
+            print(measure_name + '_' + model_type)
             with open(model_folder.path + '/pipeline.pkl', 'rb') as f:
                 pipeline = pickle.load(f)
             with open(model_folder.path + '/xgb_model.pkl', 'rb') as f:
@@ -67,9 +79,23 @@ def predict_endpoint():
                 X = X_2024_df
             elif measure_name.startswith('2022_1'):
                 X = X_2022_df
-            predictions = get_predictions(X, booster, pipeline, year_range, state, gisjoin)
-            output[measure_name][model_type] = predictions.tolist()
+            if is_baseline:
+                # year_ranges = ['1980-1999', '2000-2019', '2020-2039', '2040-2059', '2060-2079', '2080-2099'] 
+                for yr in output['baseline']:
+                    # output['baseline'][yr] = {}
+                    predictions = get_predictions(X, booster, pipeline, yr, state, gisjoin)
+                    if model_type == 'other_fuel':
+                        # Convert kWh to therms
+                        predictions = predictions * THERM_FACTOR
+                    output['baseline'][yr][model_type] = predictions.tolist()
+            else:
+                predictions = get_predictions(X, booster, pipeline, year_range, state, gisjoin)
+                if model_type == 'other_fuel':
+                    # Convert kWh to therms
+                    predictions = predictions * THERM_FACTOR
+                output['measures'][id][model_type] = predictions.tolist()
     stop = time.time()
+    # TODO: only consider homes where the measure is applicable
     # for model in preds_dict:
         # Subtract electricity off of total and turn into fuel
         # Better - train new model on the difference of the columns, and call it "other fuel"

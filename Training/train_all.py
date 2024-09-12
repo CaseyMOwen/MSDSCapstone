@@ -9,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 import pickle
 from xgboost import XGBRegressor
-from sklearn.metrics import mean_squared_log_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score
 # from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import RandomizedSearchCV
 # from sklearn.model_selection import KFold
@@ -54,7 +54,7 @@ def trainModel(df, output_col:str, job_folder:str, n_iter:int, measure_code:str,
     # columns.append(output_col)
     
     # All irrelevant columns are dropped as part of pipeline
-    y = df[output_col].clip(0,None)
+    y = df[output_col]
 
     # Build pipeline
     pipeline = Pipeline(steps=[
@@ -114,14 +114,14 @@ def trainModel(df, output_col:str, job_folder:str, n_iter:int, measure_code:str,
     results_df.to_csv(job_folder + '/random_search_results.csv')
     model = random_search.best_estimator_
 
-    train_preds = model.predict(X_train_clean).clip(0,None)
-    test_preds = model.predict(X_test_clean).clip(0,None)
+    train_preds = model.predict(X_train_clean)
+    test_preds = model.predict(X_test_clean)
     
     results = [[
         measure_code,
         output_type,
-        mean_squared_log_error(y_train, train_preds),
-        mean_squared_log_error(y_test, test_preds),
+        mean_squared_error(y_train, train_preds),
+        mean_squared_error(y_test, test_preds),
         r2_score(y_train, train_preds),
         r2_score(y_test, test_preds),
     ]]

@@ -6,6 +6,8 @@
         <link href="styles/styles.css" rel="stylesheet" type="text/css">
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
         <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+
         
     </head>
     
@@ -435,7 +437,7 @@
                     alert("You must select a region first!");
                     return false;
                 }
-                featDict = {"geoid": geoid, "year_range": year_range, "num_samples": 50}
+                featDict = {"geoid": geoid, "year_range": year_range, "num_samples": 200}
                 var radios = document.getElementsByClassName('radio-feature');
                 for( i = 0; i < radios.length; i++ ) {
                     if( radios[i].checked && radios[i].value != "No Answer") {
@@ -470,10 +472,16 @@
     <button id="postButton">Get Savings</button>
         <script src="api.js"></script>
     </br>
-        <div id="results-wrapper"></div>
-        <div id="25th Percentile"></div>
+        <div id="baseline-wrapper"></div>
+        <div id="measures-wrapper"></div>
+        <div class = "baseline-plot" id="elec-baseline-plot"></div>
+        <div class = "baseline-plot" id="fuel-baseline-plot"></div>
+        <div class = "measure-plot" id="elec-measure-plot"></div>
+        <div class = "measure-plot" id="fuel-measure-plot"></div>
+        <div class = "measure-cost-plot" id="measure-cost-plot"></div>
+        <!-- <div id="25th Percentile"></div>
         <div id="Median"></div>
-        <div id="75th Percentile"></div>
+        <div id="75th Percentile"></div> -->
 
     </div>
 
