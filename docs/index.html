@@ -31,12 +31,32 @@
             
 
         </script>
+        <div id="introduction"></br>After selecting the geographic region, please enter any additional features of the home in the selections below. No information is required, however the more you enter, the more refined the calculations will be. Entering the heating fuel and floor area are recommended at a minimum, since they are two of the most important factors in energy use. </div>
         <div id="feature-container">
             <!-- Feature Radio Buttons will be appended here -->
         </div>
         <div id="year-range-header">Time Period Selection</div>
-        <div id="year-range-description">What time period would you like the home's energy use calculated for? This affects what weather is assumed, which has been calculated for each year range based on climate models in order to include the affects of global warming.</div>
+        <div id="year-range-description">What time period would you like the home's potential measure savings calculated for? This affects what weather is assumed, which has been calculated for each year range based on climate models in order to include the affects of global warming.</div>
         <div id="yearRangeButtons"></div>
+    </br></br>
+    <button id="postButton">Get Savings</button>
+        <script src="api.js"></script>
+    </br>
+        <div id="chart-description"></br>The below charts show the home's electricity and other fuel use as a function of 20-year span, as well as the electricity and other fuel savings that are expected for each measure. "Fuel" represents whatever energy your home uses other than electricity - for many people this is primarily natural gas or fuel oil.
+        </br></br>
+        The error bars on the charts represent the uncertainty in the caluclation - the more information you provide, the tighter these will be. The bars enclose the middle 50% of outcomes - the 25% percentile to the 75% percentile. Much of this uncertainty is due to the uncertainty in the other properties of your home. Even if you make every possible selection above, there is still a lot that these charts do not know about your home - what materials the walls are made out of, for example. The machine learning models themselves also have a degree of error, which adds additional uncertainty.
+        </div>
+        <div id="baseline-wrapper"></div>
+        <div id="measures-wrapper"></div>
+        <div class = "baseline-plot" id="elec-baseline-plot"></div>
+        <div class = "baseline-plot" id="fuel-baseline-plot"></div>
+        <div class = "measure-plot" id="elec-measure-plot"></div>
+        <div class = "measure-plot" id="fuel-measure-plot"></div>
+        <div class = "measure-cost-plot" id="measure-cost-plot"></div>
+        <!-- <div id="25th Percentile"></div>
+        <div id="Median"></div>
+        <div id="75th Percentile"></div> -->
+
         <!-- <div id="dropdownContainer"> -->
             <!-- Dropdown pairs will be appended here -->
         <!-- </div> -->
@@ -47,6 +67,7 @@
         <!-- <div id="featuredescription"></div> -->
         
         <script>
+            document.getElementById("chart-description").style.display = 'none';
             function findFirstDescendant(parentclass, doc, tagname) {
                 parent = doc.getElementsByClassName(parentclass)[0];
                 var descendants = parent.getElementsByTagName(tagname);
@@ -468,20 +489,6 @@
         </script>        
         
         
-    </br></br>
-    <button id="postButton">Get Savings</button>
-        <script src="api.js"></script>
-    </br>
-        <div id="baseline-wrapper"></div>
-        <div id="measures-wrapper"></div>
-        <div class = "baseline-plot" id="elec-baseline-plot"></div>
-        <div class = "baseline-plot" id="fuel-baseline-plot"></div>
-        <div class = "measure-plot" id="elec-measure-plot"></div>
-        <div class = "measure-plot" id="fuel-measure-plot"></div>
-        <div class = "measure-cost-plot" id="measure-cost-plot"></div>
-        <!-- <div id="25th Percentile"></div>
-        <div id="Median"></div>
-        <div id="75th Percentile"></div> -->
 
     </div>
 

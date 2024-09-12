@@ -3,10 +3,11 @@
 document.getElementById('postButton').addEventListener('click', () => {
     featdict = getFeatureDict()
     if (featdict != false) {
-        document.getElementById('baseline-wrapper').innerHTML = "Loading..."
+        document.getElementById('baseline-wrapper').innerHTML = "Loading... Approximate wait time 30s."
         getSavings(featdict)
         .then(data => {
             document.getElementById('baseline-wrapper').innerHTML = ""
+            document.getElementById("chart-description").style.display = 'block';
 
             console.log(data); // JSON data parsed by `response.json()` call
             // const baseline_wrapper = document.getElementById('measures-wrapper')
@@ -49,13 +50,14 @@ document.getElementById('postButton').addEventListener('click', () => {
             var elec_baseline_errorminus = []
             var fuel_baseline_errorminus = []
             var baseline_x = []
+            console.log()
             for (const year_range in data['baseline']) {
                 baseline_x.push(year_range)
                 baseline_median_elec = quantile(data['baseline'][year_range]['electricity'], .50)
                 baseline_median_fuel = quantile(data['baseline'][year_range]['other_fuel'], .50)
                 // The bars are the medians
                 elec_baseline_y.push(baseline_median_elec)
-                fuel_baseline_y.push(baseline_median_elec)
+                fuel_baseline_y.push(baseline_median_fuel)
 
                 elec_baseline_error.push(quantile(data['baseline'][year_range]['electricity'], .75) - baseline_median_elec)
                 fuel_baseline_error.push(quantile(data['baseline'][year_range]['other_fuel'], .75) - baseline_median_fuel)
@@ -98,7 +100,10 @@ document.getElementById('postButton').addEventListener('click', () => {
                 yaxis: {
                     title: 'Annual Energy Baseline Use (kWh)',
                     rangemode: 'tozero',
-                    autorange: true
+                    autorange: true,
+                    autorangeoptions: {
+                        include: 5000
+                    }
                 }
             }
             var fuel_baseline_layout = {
@@ -106,7 +111,10 @@ document.getElementById('postButton').addEventListener('click', () => {
                 yaxis: {
                     title: 'Annual Energy Baseline Use (therms)',
                     rangemode: 'tozero',
-                    autorange: true
+                    autorange: true,
+                    autorangeoptions: {
+                        include: 500
+                    }
                 }
             }
             elec_baseline_plot = document.getElementById('elec-baseline-plot')
@@ -174,7 +182,10 @@ document.getElementById('postButton').addEventListener('click', () => {
                 xaxis: {
                     title: 'Energy Savings, Median and Middle 50% (kWh)',
                     rangemode: 'tozero',
-                    autorange: true
+                    autorange: true,
+                    autorangeoptions: {
+                        include: 5000
+                    }
                 },
                 yaxis: {
                     showticklabels: true,
@@ -187,7 +198,10 @@ document.getElementById('postButton').addEventListener('click', () => {
                 xaxis: {
                     title: 'Energy Savings, Median and Middle 50% (therms)',
                     rangemode: 'tozero',
-                    autorange: true
+                    autorange: true,
+                    autorangeoptions: {
+                        include: 500
+                    }
                 },
                 yaxis: {
 
@@ -260,7 +274,10 @@ document.getElementById('postButton').addEventListener('click', () => {
                 xaxis: {
                     title: 'Annual Energy Savings, Median and Middle 50% (kWh)',
                     rangemode: 'tozero',
-                    autorange: true
+                    autorange: true,
+                    autorangeoptions: {
+                        include: 5000
+                    }
                 },
                 yaxis: {
                     showticklabels: true,
@@ -273,7 +290,10 @@ document.getElementById('postButton').addEventListener('click', () => {
                 xaxis: {
                     title: 'Annual Energy Savings, Median and Middle 50% (therms)',
                     rangemode: 'tozero',
-                    autorange: true
+                    autorange: true,
+                    autorangeoptions: {
+                        include: 500
+                    }
                 },
                 yaxis: {
 
@@ -423,7 +443,7 @@ document.getElementById('postButton').addEventListener('click', () => {
             // document.getElementById('75th Percentile').innerHTML = "75th Percentile: " + quantile(data, .75).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
         })
         .catch(error => {
-            document.getElementById('baseline-wrapper').innerHTML = "There was an error fetching the data."
+            document.getElementById('baseline-wrapper').innerHTML = "There was an error fetching the data. Try specifying different inputs - there are still bugs (I know there is a bug when selecting heating system as mini-splits)"
             console.error('There was a problem with the fetch operation:', error);
         });
     }
