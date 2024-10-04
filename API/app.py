@@ -18,6 +18,7 @@ import numpy as np
 import polars as pl
 import re
 import copy
+import yaml
 
 app = Flask(__name__)
 CORS(app)
@@ -38,19 +39,22 @@ def predict_endpoint():
     else:
         num_samples = 100
     feats = lookup_county_puma(feats)
+    yaml_dict = get_yaml_objs()
     feats_2022_1 = copy.deepcopy(feats)
     # 2022 does not have support for distinguising non-ducted geat pumps from ducted heat pumps - merge both types into one "heat pump" feature
     if "in.hvac_heating_type" in feats_2022_1 and feats_2022_1["in.hvac_heating_type"] == "Non-Ducted Heat Pump":
         feats_2022_1["in.hvac_heating_type"] = 'Ducted Heat Pump'
-    print(feats)
-    print(feats_2022_1)
-    X_2022, state, gisjoin = generate_sample(feats_2022_1, num_samples, release="2022_1")
+    # print(feats)
+    # print(feats_2022_1)
+    X_2022, state, gisjoin = generate_sample(feats_2022_1, num_samples, release="2022_1", yaml_dict=yaml_dict)
     step1 = time.time()
-    X_2024, state, gisjoin = generate_sample(feats, num_samples, release="2024_1")
+    X_2024, state, gisjoin = generate_sample(feats, num_samples, release="2024_1", yaml_dict=yaml_dict)
+    full_sample_2022, full_sample_2024 = add_applic_matrices(X_2022, X_2024, yaml_dict)
     step2 = time.time()
-    X_2022_df, X_2024_df = X_2022.to_pandas(), X_2024.to_pandas()
-    print(X_2024.select('in.duct_leakage_and_insulation').head(5))
-    print(X_2024_df['in.duct_leakage_and_insulation'].head(5))
+    X_2022_df, X_2024_df = full_sample_2022.to_pandas(), full_sample_2024.to_pandas()
+    # print(X_2024_df.columns)
+    # print(X_2024.select('in.duct_leakage_and_insulation').head(5))
+    # print(X_2024_df['in.duct_leakage_and_insulation'].head(5))
     
 
     output = {'cost': {'electricity': .15, 'other_fuel': 1}, 'baseline': {'1980-1999': {}, '2000-2019': {}, '2020-2039': {}, '2040-2059': {}, '2060-2079': {}, '2080-2099': {}}, 'measures': {}}
@@ -70,15 +74,21 @@ def predict_endpoint():
             output['measures'][id]['description'] = measure_row['description']
         for model_folder in os.scandir(measure_folder):
             model_type = model_folder.name
-            print(measure_name + '_' + model_type)
+            # print(measure_name + '_' + model_type)
             with open(model_folder.path + '/pipeline.pkl', 'rb') as f:
                 pipeline = pickle.load(f)
             with open(model_folder.path + '/xgb_model.pkl', 'rb') as f:
                 booster = pickle.load(f)
             if measure_name.startswith('2024_1'):
-                X = X_2024_df
+                if is_baseline:
+                    X = copy.deepcopy(X_2024_df)
+                else:
+                    print(X_2024_df.dtypes['measure_' + str(id) + "_applies"])
+                    X = X_2024_df[X_2024_df['measure_' + str(id) + "_applies"]==True]
+                X = X.drop(columns=[col for col in X if col.endswith('_applies')])
             elif measure_name.startswith('2022_1'):
-                X = X_2022_df
+                X = X_2022_df[X_2022_df['measure_' + str(id) + "_applies"]==True]
+                X = X.drop(columns=[col for col in X if col.endswith('_applies')])
             if is_baseline:
                 # year_ranges = ['1980-1999', '2000-2019', '2020-2039', '2040-2059', '2060-2079', '2080-2099'] 
                 for yr in output['baseline']:
@@ -89,11 +99,17 @@ def predict_endpoint():
                         predictions = predictions * THERM_FACTOR
                     output['baseline'][yr][model_type] = predictions.tolist()
             else:
-                predictions = get_predictions(X, booster, pipeline, year_range, state, gisjoin)
-                if model_type == 'other_fuel':
-                    # Convert kWh to therms
-                    predictions = predictions * THERM_FACTOR
-                output['measures'][id][model_type] = predictions.tolist()
+                if X.shape[0] == 0:
+                    # All of sample is filtered out when checking applicability - measure does not apply at all
+                    output['measures'][id][model_type] = []
+                    output['measures'][id]['applicability'] = 0
+                else:
+                    predictions = get_predictions(X, booster, pipeline, year_range, state, gisjoin)
+                    if model_type == 'other_fuel':
+                        # Convert kWh to therms
+                        predictions = predictions * THERM_FACTOR
+                    output['measures'][id][model_type] = predictions.tolist()
+                    output['measures'][id]['applicability'] = X.shape[0]/num_samples
     stop = time.time()
     # TODO: only consider homes where the measure is applicable
     # for model in preds_dict:
@@ -276,16 +292,187 @@ def lookup_county_puma(feats:dict):
     feats["in.county_and_puma"] = county_and_puma
     return feats
 
+def get_yaml_objs():
+    '''
+    Reads the relevant yaml files that describe what are the requirements for a measure to be considered "applicable", and combines all relevant blocks, one for each measure, into a single dict.
+    '''
+    measures_df = pd.read_csv('measures.csv')
+    yaml_dict = {'2022_1': {}, '2024_1': {}}
+    for i, row in measures_df.iterrows():
+        # if row['upgrade_name'] not in yaml_dict:
+        if row['name'] == "Baseline":
+            continue
+        with open('appfiles/' + row['measure_info_file'], 'r') as f:
+            obj = yaml.safe_load(f)
+            for upgrade in obj['upgrades']:
+                if upgrade['upgrade_name'] == row['upgrade_name']:
+                    yaml_dict[row['resstock_version']][row['measure_id']] = upgrade
+    return yaml_dict
 
-def generate_sample(feats:dict, num_samples:int=100, release:str="2024_1"):
+def get_dependent_applicability_cols(yaml_dict, release):
+    '''
+    Parses the yaml dict and returns the columns, in capital case, that are referenced to determine applicability. Recursive wrapper for get_statement_cols.
+    '''
+    # pass
+    dep_cols = set()
+    for measure_id in yaml_dict[release]:
+        # measure = yaml_dict[measure_id]
+        # print(yaml_dict[measure_id]['upgrade_name'])
+        for option in yaml_dict[release][measure_id]['options']:
+            if 'apply_logic' not in option:
+                continue
+            option_ele = option['apply_logic']
+            # Sometimes this is formatted where the statement is the only object in a list
+            if type(option_ele) is list:
+                option_ele = option_ele[0]
+            # print(option_ele)
+            statement_cols = get_statement_cols(option_ele)
+            # print(statement_cols)
+            dep_cols = set.union(dep_cols, statement_cols)
+    return dep_cols
+
+def get_statement_cols(statement):
+    '''
+    Recursively determines what columns are required to determine the statements truth. Recursively gets the union of the set dependent columns of all nested statements. 
+    '''
+    if type(statement) is list and len(statement) == 1:
+        return statement[0]
+    if type(statement) is str:
+        # Recursion base case - parse from seperator
+        column = statement.split('|')[0]
+        return {column}
+    # Statment is a dict with either key 'and' or key 'or'
+    elif 'and' in statement:
+        return set.union(*[get_statement_cols(item) for item in statement['and']])
+    elif 'or' in statement:
+        # output = [get_statement_cols(item) for item in statement['or']]
+        # print(f'or output: {output}')
+        return set.union(*[get_statement_cols(item) for item in statement['or']])
+    elif 'not' in statement:
+        # output = get_statement_cols(statement['not'])
+        # print(f'not output: {output}')
+        return get_statement_cols(statement['not'])
+    
+# import polars as pl
+# feats = {"geoid": "0900306"}
+# feats = lookup_county_puma(feats)
+# yaml_dict = get_yaml_objs()
+# sample_df_2022, state, gisjoin = generate_sample(feats, 100, "2022_1", yaml_dict)
+# sample_df_2024, state, gisjoin = generate_sample(feats, 100, "2024_1", yaml_dict)
+# print(sample_df)
+# print(yaml_objs[1])
+
+def get_truth(sample_df: pl.DataFrame, statement) -> pl.DataFrame:
+    '''
+    Recursively gets the truth vector for a given statement. Calls either and, or, or not on each nested statement.
+    '''
+    if type(statement) is str:
+        # Recursion base case - parse from seperator
+        feature, value = statement.split('|')
+        # print(feature)
+        # print(value)
+        # column = to_underscore_case(feature)
+        # print(column)
+        return sample_df.select(new = to_underscore_case(feature)).rename({'new': statement}) == value
+    # Statment is a dict with either key 'and' or key 'or'
+    elif 'and' in statement:
+        bool_list = [get_truth(sample_df, item) for item in statement['and']]
+        df = pl.concat(bool_list, how='horizontal')
+        new_name = 'and_[' + '|'.join(df.columns) + ']'
+        df = df.with_columns(pl.all_horizontal(pl.all()).alias(new_name))
+        # print(df)
+        return df.select(new_name)
+        # return all([get_truth(sample_df, item) for item in statement['and']])
+    elif 'or' in statement:
+        bool_list = [get_truth(sample_df, item) for item in statement['or']]
+        df = pl.concat(bool_list, how='horizontal')
+        new_name = 'or_[' + '|'.join(df.columns) + ']'
+        df = df.with_columns(pl.any_horizontal(pl.all()).alias(new_name))
+        # print(df)
+        return df.select(new_name)
+        # return any([get_truth(sample_df, item) for item in statement['or']])
+    elif 'not' in statement:
+        bool_list = [get_truth(sample_df,statement['not'])]
+        # print(bool_list)
+        df = pl.concat(bool_list, how='horizontal')
+        col_name = df.columns[0]
+        df = df.select(pl.col(col_name).not_()).rename({col_name: 'not_[' + col_name + ']'})
+        return df
+
+
+def get_applicability(sample_df, yaml_dict:dict, measure_id, release:str):
+    '''
+    Gets the applicability of a given measure as a vector, relative to the sample that was previously generated. Considers the measure applicable if any of the sub-options are applicable to the sample row. Wrapper for recursive get_truth().
+    '''
+    yaml_obj = yaml_dict[release][measure_id]
+    option_applic_vecs = []
+    option_num = 0
+    for option in yaml_obj['options']:
+        if 'apply_logic' not in option:
+            continue
+        option_num += 1
+        option_ele = option['apply_logic']
+        # Sometimes this is formatted where the statement is the only object in a list
+        if type(option_ele) is list:
+            option_ele = option_ele[0]
+        # print(option_ele)
+        option_applic_vec = get_truth(sample_df, option_ele)
+        option_applic_vec = option_applic_vec.rename({option_applic_vec.columns[0]: 'option' + str(option_num)})
+        # print(option_applic_vec)
+        option_applic_vecs.append(option_applic_vec)
+    
+    options_concat = pl.concat(option_applic_vecs, how='horizontal')
+    new_col_name = 'measure_' + str(measure_id) + '_applies'
+    any_option_applies = options_concat.with_columns(pl.any_horizontal(pl.all()).alias(new_col_name)).select(new_col_name)
+    # print(any_option_applies)
+    return any_option_applies
+    # return applic_vec.rename({applic_vec.columns[0]: 'measure_' + str(measure_id) + '_applies'})
+
+def add_applic_matrices(sample_df_2022, sample_df_2024, yaml_dict):
+    '''
+    Gets applicability vectors for all measures, and horizontally concatenates them with the relevant sample df. Returns the combined dataframes
+    '''
+    applic_vecs_2022, applic_vecs_2024 = [], []
+    measures_df = pd.read_csv('measures.csv')
+    for i, row in measures_df.iterrows():
+        if row['name'] == "Baseline":
+            continue
+        # print(row['measure_id'])
+        release = row['resstock_version']
+        if release == "2022_1":
+            # sample_df = sample_df_2022
+            applic_vecs_2022.append(get_applicability(sample_df_2022, yaml_dict, row['measure_id'], release))
+        elif release == "2024_1":
+            applic_vecs_2024.append(get_applicability(sample_df_2024, yaml_dict, row['measure_id'], release))
+    
+    full_sample_2022 = pl.concat([sample_df_2022, pl.concat(applic_vecs_2022, how='horizontal')], how='horizontal')
+    full_sample_2024 = pl.concat([sample_df_2024, pl.concat(applic_vecs_2024, how='horizontal')], how='horizontal')
+    return full_sample_2022, full_sample_2024
+
+# # print(yaml_dict['2024_1'][9]['options'])
+# full_sample_2022, full_sample_2024 = add_applic_matrices(sample_df_2022, sample_df_2024, yaml_dict)
+# # full_sample_2022 = pl.concat([sample_df_2022, matrix],how='horizontal')
+# # full_sample_2024 = pl.concat([sample_df_2024, matrix],how='horizontal')
+# full_sample_2022.write_csv('sample_test_2022.csv')
+# full_sample_2024.write_csv('sample_test_2024.csv')
+
+
+def generate_sample(feats:dict, num_samples:int, release:str, yaml_dict):
 # For each row in dependencies list - check if we have what we need for this column, and if we need it. If so, add a column to the samples df, each of correct distribution according to the existing row
     dep_df = pd.read_csv('appfiles/schema/' + release + '_dependencies.csv')
     column_plan_df = pd.read_csv('column_plan.csv', usecols=['field_name','keep_for_model'])
+
     # List of columns that the model requires as inputs
-    needed_und_cols = column_plan_df.loc[
+    needed_model_und_cols = column_plan_df.loc[
         (column_plan_df['keep_for_model'] == 'Yes') | 
         (column_plan_df['keep_for_model'] == 'Split')
     ]['field_name'].to_list()
+    
+    # Set of cols needed to calculate measure applicability 
+    needed_applic_cap_cols = get_dependent_applicability_cols(yaml_dict, release)
+    needed_applic_und_cols = [to_underscore_case(item) for item in needed_applic_cap_cols]
+
+    needed_und_cols = list(set.union(set(needed_model_und_cols), set(needed_applic_und_cols)))
 
     if release == "2022_1":
         needed_und_cols.remove('in.duct_location')
@@ -295,7 +482,8 @@ def generate_sample(feats:dict, num_samples:int=100, release:str="2024_1"):
         needed_und_cols.remove('in.cooking_range_usage_level')
         needed_und_cols.remove('in.refrigerator_usage_level')
         needed_und_cols.remove('in.duct_leakage_and_insulation')
-        needed_und_cols.append('in.ducts')
+        if 'in.ducts' not in needed_und_cols:
+            needed_und_cols.append('in.ducts')
 
     needed_und_cols.append("in.county_and_puma")
     # Initialize with known parameters
@@ -422,6 +610,8 @@ def add_col_to_sample(sample_df: pl.DataFrame, cap_field: str, cap_dependencies:
     )
 
     return sample_col.collect()
+
+
 
 
 if __name__ == '__main__':

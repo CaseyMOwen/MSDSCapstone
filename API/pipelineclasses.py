@@ -28,9 +28,9 @@ class Preprocessing():
     def drop_ignored_columns(self, X: pd.DataFrame):
         column_plan_df = pd.read_csv('column_plan.csv', usecols=['field_name','keep_for_model'])
         # These are the columns to keep before doing all splitting
-        if self.version == "2024_1":
-            print(f"Top of drop: {X['in.duct_leakage_and_insulation'].unique()}")
-        print('\n')
+        # if self.version == "2024_1":
+        #     print(f"Top of drop: {X['in.duct_leakage_and_insulation'].unique()}")
+        # print('\n')
         in_cols = column_plan_df.loc[
             (column_plan_df['keep_for_model'] == 'Yes') | 
             (column_plan_df['keep_for_model'] == 'Split')
@@ -44,7 +44,7 @@ class Preprocessing():
         # print(X.columns)
         # X = X[in_cols]
 
-        print('\n')
+        # print('\n')
         return X
     
     def str_to_int(self, text:str):
@@ -72,7 +72,8 @@ class Preprocessing():
         #     unique_dict[col] = X[col].unique()
         # print(unique_dict)
         # print('\n------\n')
-
+        # print(X.shape[0])
+        # print(X['in.duct_leakage_and_insulation'].unique())
 
 
         X[['in.duct_leakage','in.duct_insulation']] = X['in.duct_leakage_and_insulation'].str.split(', ',expand=True)

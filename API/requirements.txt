@@ -9,3 +9,4 @@ category_encoders
 pyarrow
 # PyAthena[SQLAlchemy]
 polars==0.20.31
+pyyaml==6.0.2
