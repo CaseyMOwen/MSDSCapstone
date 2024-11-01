@@ -23,6 +23,17 @@ import yaml
 app = Flask(__name__)
 CORS(app)
 
+def get_fuel_cost(row):
+    if row['in.heating_fuel'] == 'Natural Gas':
+        return row['Average Natural Gas $/therm']
+    elif row['in.heating_fuel'] == 'Fuel Oil':
+        return row['Average Fuel Oil $/therm']
+    elif row['in.heating_fuel'] == 'Propane':
+        return row['Average Propane $/therm']
+    else: #Electricity
+        return 0
+
+
 @app.route('/predict', methods=['POST'])
 def predict_endpoint():
     if request.data:
@@ -56,11 +67,21 @@ def predict_endpoint():
     # print(X_2024.select('in.duct_leakage_and_insulation').head(5))
     # print(X_2024_df['in.duct_leakage_and_insulation'].head(5))
     
+    utlity_rates = pd.read_parquet('appfiles/utility_rates.parquet')
+    X_2022_with_rates_df = X_2022_df.merge(utlity_rates, left_on='in.state', right_on='State')
+    X_2024_with_rates_df = X_2024_df.merge(utlity_rates, left_on='in.state', right_on='State')
+    # print(X_2022_with_rates_df.columns)
+    # print(X_2024_with_rates_df.columns)
+    fuel_rates_2022 = X_2022_with_rates_df.apply(get_fuel_cost, axis=1).to_list()
+    fuel_rates_2024 = X_2024_with_rates_df.apply(get_fuel_cost, axis=1).to_list()
+    elec_rates_2022 = X_2022_with_rates_df['Average Electricity Dollars per kWh'].to_list()
+    elec_rates_2024 = X_2024_with_rates_df['Average Electricity Dollars per kWh'].to_list()
 
-    output = {'cost': {'electricity': .15, 'other_fuel': 1}, 'baseline': {'1980-1999': {}, '2000-2019': {}, '2020-2039': {}, '2040-2059': {}, '2060-2079': {}, '2080-2099': {}}, 'measures': {}}
+    output = {'cost': {'electricity': {'2022_1': elec_rates_2022, '2024_1':elec_rates_2024}, 'other_fuel': {'2022_1': fuel_rates_2022, '2024_1':fuel_rates_2024}}, 'baseline': {'1980-1999': {}, '2000-2019': {}, '2020-2039': {}, '2040-2059': {}, '2060-2079': {}, '2080-2099': {}}, 'measures': {}}
     # TODO: possible read files in parallel, then make predictions on loaded objects
     THERM_FACTOR = 0.0341214116
     measures_df = pd.read_csv('measures.csv')
+    # elec_per_kwh, ng_per_therm, oil_per_therm, propane_per_therm = tuple(utlity_rates)
     for measure_folder in os.scandir('appfiles/models'):
         # print(subfolder)
         measure_name = measure_folder.name
@@ -83,7 +104,7 @@ def predict_endpoint():
                 if is_baseline:
                     X = copy.deepcopy(X_2024_df)
                 else:
-                    print(X_2024_df.dtypes['measure_' + str(id) + "_applies"])
+                    # print(X_2024_df.dtypes['measure_' + str(id) + "_applies"])
                     X = X_2024_df[X_2024_df['measure_' + str(id) + "_applies"]==True]
                 X = X.drop(columns=[col for col in X if col.endswith('_applies')])
             elif measure_name.startswith('2022_1'):
@@ -448,6 +469,10 @@ def add_applic_matrices(sample_df_2022, sample_df_2024, yaml_dict):
     full_sample_2022 = pl.concat([sample_df_2022, pl.concat(applic_vecs_2022, how='horizontal')], how='horizontal')
     full_sample_2024 = pl.concat([sample_df_2024, pl.concat(applic_vecs_2024, how='horizontal')], how='horizontal')
     return full_sample_2022, full_sample_2024
+
+# def add_costs(sample_df_2022, sample_df_2024):
+#     rates_df = pd.read_parquet('appfiles/utility_rates.parquet')
+
 
 # # print(yaml_dict['2024_1'][9]['options'])
 # full_sample_2022, full_sample_2024 = add_applic_matrices(sample_df_2022, sample_df_2024, yaml_dict)

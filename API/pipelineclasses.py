@@ -75,9 +75,18 @@ class Preprocessing():
         # print(X.shape[0])
         # print(X['in.duct_leakage_and_insulation'].unique())
 
+        # If all values are None, there are no commas and cannot split - therefore both new columns become none
+        if set(X['in.duct_leakage_and_insulation'].unique()) == set(['None']):
+            X['in.duct_leakage'] = 'None'
+            X['in.duct_insulation'] = 'None'
+        else:
+            X[['in.duct_leakage','in.duct_insulation']] = X['in.duct_leakage_and_insulation'].str.split(', ',expand=True)
+            X['in.duct_insulation'] = X['in.duct_insulation'].fillna('None')
 
-        X[['in.duct_leakage','in.duct_insulation']] = X['in.duct_leakage_and_insulation'].str.split(', ',expand=True)
-        X['in.duct_insulation'] = X['in.duct_insulation'].fillna('None')
+        # try:
+        #     X[['in.duct_leakage','in.duct_insulation']] = X['in.duct_leakage_and_insulation'].str.split(', ',expand=True)
+        #     X['in.duct_insulation'] = X['in.duct_insulation'].fillna('None')
+        # except ValueError: 
 
         to_drop.append('in.duct_leakage_and_insulation')
         # X = X.drop(columns=['in.duct_leakage_and_insulation'])

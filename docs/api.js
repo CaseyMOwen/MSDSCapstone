@@ -313,8 +313,14 @@ document.getElementById('postButton').addEventListener('click', () => {
             var measure_cost_errorminus = []
             var measure_cost_y = []
             for (const measure_id in data['measures']) {
-                measure_elec_cost_array = data['measures'][measure_id]['electricity'].map(function(x) {return x*data['cost']['electricity']})
-                measure_fuel_cost_array = data['measures'][measure_id]['other_fuel'].map(function(x) {return x*data['cost']['other_fuel']})
+                measure_version = data['measures'][measure_id]['code'].substring(0,6)
+                // Multiply measure energy use at each sample * fuel/elec cost at each sample
+                measure_elec_cost_array = data['measures'][measure_id]['electricity'].map((num, index) => num * data['cost']['electricity'][measure_version][index])
+                measure_fuel_cost_array = data['measures'][measure_id]['other_fuel'].map((num, index) => num * data['cost']['other_fuel'][measure_version][index])
+
+                // measure_fuel_cost_array = data['measures'][measure_id]['other_fuel'].map(function(x) {return x*data['cost']['other_fuel']})
+                // ['electricity'].map(function(x) {return x*data['cost']['electricity']})
+
                 // Sum two arrays into one
                 measure_cost_array = measure_elec_cost_array.map(function (num, idx) {
                     return num + measure_fuel_cost_array[idx];
