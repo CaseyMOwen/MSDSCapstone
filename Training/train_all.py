@@ -103,7 +103,7 @@ def trainModel(df, output_col:str, job_folder:str, n_iter:int, measure_code:str,
         scoring = ('r2', 'neg_root_mean_squared_error'),
         refit='neg_root_mean_squared_error',
         n_jobs = -1,
-        cv = 3,
+        cv = 5,
         verbose=True,
         pre_dispatch='1*n_jobs',
         return_train_score=True
@@ -164,7 +164,7 @@ for i, row in measures_df.iterrows():
         Path(measure_folder).mkdir(parents=True, exist_ok=True)
         job_folder = os.path.join(measure_folder, output_type)
         Path(job_folder).mkdir(parents=True, exist_ok=True)
-        trainModel(df, output_cols[output_type], job_folder, 50, measure_code, row["resstock_version"])
+        trainModel(df, output_cols[output_type], job_folder, 200, measure_code, row["resstock_version"])
 
 '''
 # Run extrapolation study on selected models

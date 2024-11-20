@@ -308,41 +308,41 @@ document.getElementById('postButton').addEventListener('click', () => {
             Plotly.newPlot(fuel_measure_plot, [fuel_trace], fuel_measure_layout)
 
             // Costs bar plots
-            var measure_cost_x = []
-            var measure_cost_error = []
-            var measure_cost_errorminus = []
-            var measure_cost_y = []
+            var measure_savings_x = []
+            var measure_savings_error = []
+            var measure_savings_errorminus = []
+            var measure_savings_y = []
             for (const measure_id in data['measures']) {
                 measure_version = data['measures'][measure_id]['code'].substring(0,6)
-                // Multiply measure energy use at each sample * fuel/elec cost at each sample
-                measure_elec_cost_array = data['measures'][measure_id]['electricity'].map((num, index) => num * data['cost']['electricity'][measure_version][index])
-                measure_fuel_cost_array = data['measures'][measure_id]['other_fuel'].map((num, index) => num * data['cost']['other_fuel'][measure_version][index])
+                // Multiply measure energy use at each sample * fuel/elec savings at each sample
+                measure_elec_savings_array = data['measures'][measure_id]['electricity'].map((num, index) => num * data['cost']['electricity'][measure_version][index])
+                measure_fuel_savings_array = data['measures'][measure_id]['other_fuel'].map((num, index) => num * data['cost']['other_fuel'][measure_version][index])
 
-                // measure_fuel_cost_array = data['measures'][measure_id]['other_fuel'].map(function(x) {return x*data['cost']['other_fuel']})
+                // measure_fuel_savings_array = data['measures'][measure_id]['other_fuel'].map(function(x) {return x*data['cost']['other_fuel']})
                 // ['electricity'].map(function(x) {return x*data['cost']['electricity']})
 
                 // Sum two arrays into one
-                measure_cost_array = measure_elec_cost_array.map(function (num, idx) {
-                    return num + measure_fuel_cost_array[idx];
+                measure_savings_array = measure_elec_savings_array.map(function (num, idx) {
+                    return num + measure_fuel_savings_array[idx];
                   });
-                measure_cost_median = quantile(measure_cost_array, .50)
-                measure_cost_y.push(data['measures'][measure_id]['name'])
+                measure_savings_median = quantile(measure_savings_array, .50)
+                measure_savings_y.push(data['measures'][measure_id]['name'])
                 // The bars are the medians
-                measure_cost_x.push(measure_cost_median)
+                measure_savings_x.push(measure_savings_median)
                 
-                measure_cost_error.push(quantile(measure_cost_array, .75) - measure_cost_median)
+                measure_savings_error.push(quantile(measure_savings_array, .75) - measure_savings_median)
 
-                measure_cost_errorminus.push(measure_cost_median - quantile(measure_cost_array, .25))
+                measure_savings_errorminus.push(measure_savings_median - quantile(measure_savings_array, .25))
             }
             var trace = {
-                x: measure_cost_x,
-                y: measure_cost_y,
+                x: measure_savings_x,
+                y: measure_savings_y,
                 // name: year_range,
                 error_x: {
                     type: 'data',
                     symmetric: false,
-                    array: measure_cost_error,
-                    arrayminus: measure_cost_errorminus,
+                    array: measure_savings_error,
+                    arrayminus: measure_savings_errorminus,
                     visible: true,
                     color: 'black'
                 },
@@ -350,7 +350,7 @@ document.getElementById('postButton').addEventListener('click', () => {
                 orientation: 'h'
                 // boxpoints: 'suspectedoutliers'
             }
-            var measure_cost_layout = {
+            var measure_savings_layout = {
                 title: "Measure Cost Savings",
                 xaxis: {
                     title: 'Annual $ Savings, Median and Middle 50%',
@@ -363,93 +363,83 @@ document.getElementById('postButton').addEventListener('click', () => {
                     automargin: true
                 }
             }
-            measure_cost_plot = document.getElementById('measure-cost-plot')
-            Plotly.newPlot(measure_cost_plot, [trace], measure_cost_layout)
+            measure_savings_plot = document.getElementById('measure-savings-plot')
+            Plotly.newPlot(measure_savings_plot, [trace], measure_savings_layout)
 
-// Measure Boxplots:
-// var elec_measure_data = []
-// var fuel_measure_data = []
-            // for (const measure_id in data['measures']) {
-            //     var elec_trace = {
-            //         x: data['measures'][measure_id]['electricity'],
-            //         type: 'box',
-            //         name: data['measures'][measure_id]['name'],
-            //         boxpoints: 'suspectedoutliers'
-            //     }
-            //     var fuel_trace = {
-            //         x: data['measures'][measure_id]['other_fuel'],
-            //         type: 'box',
-            //         name: data['measures'][measure_id]['name'],
-            //         boxpoints: 'suspectedoutliers'
-            //     }
-            //     elec_measure_data.push(elec_trace)
-            //     fuel_measure_data.push(fuel_trace)
-            // }
-            // var elec_measure_layout = {
-            //     title: "Electricity Savings"
-            // }
-            // var fuel_measure_layout = {
-            //     title: "Fuel Savings"
-            // }
-            // elec_measure_plot = document.getElementById('elec-measure-plot')
-            // fuel_measure_plot = document.getElementById('fuel-measure-plot')
-            // Plotly.newPlot(elec_measure_plot, elec_measure_data, elec_measure_layout)
-            // Plotly.newPlot(fuel_measure_plot, fuel_measure_data, fuel_measure_layout)
+            // Payback bar plots
+            var measure_payback_x = []
+            var measure_payback_error = []
+            var measure_payback_errorminus = []
+            var measure_payback_y = []
+            for (const measure_id in data['measures']) {
+                measure_code = data['measures'][measure_id]['code']
+                measure_version = data['measures'][measure_id]['code'].substring(0,6)
+                measure_cost = document.getElementById(measure_code + "-cost").value
+                // Multiply measure energy use at each sample * fuel/elec savings at each sample
+                measure_elec_savings_array = data['measures'][measure_id]['electricity'].map((num, index) => num * data['cost']['electricity'][measure_version][index])
+                measure_fuel_savings_array = data['measures'][measure_id]['other_fuel'].map((num, index) => num * data['cost']['other_fuel'][measure_version][index])
 
+                // measure_fuel_savings_array = data['measures'][measure_id]['other_fuel'].map(function(x) {return x*data['cost']['other_fuel']})
+                // ['electricity'].map(function(x) {return x*data['cost']['electricity']})
 
-                // measure_results = document.createElement('div')
-                // measure_results.setAttribute("class", "measure-results")
-                // measure_results.setAttribute("id", measure_id + "-measure-results")
-                // if (measure_id == "0") {
-                //     baseline_wrapper.appendChild(measure_results)
-                // } else {
-                //     measures_wrapper.appendChild(measure_results)
-                // }
+                // Sum two arrays into one
+                measure_savings_array = measure_elec_savings_array.map(function (num, idx) {
+                    return num + measure_fuel_savings_array[idx];
+                  });
+                measure_savings_median = quantile(measure_savings_array, .50)
+                // The bars are the medians
+                measure_savings_x = measure_savings_median
+                
+                measure_savings_error = quantile(measure_savings_array, .75) - measure_savings_median
+                
+                measure_savings_errorminus = measure_savings_median - quantile(measure_savings_array, .25)
+                if (measure_savings_median > 0) {
+                    measure_payback_y.push(data['measures'][measure_id]['name'])
+                    measure_payback_x.push(measure_cost/measure_savings_median)
+                    measure_payback_error.push(measure_cost/measure_savings_error)
+                    measure_payback_errorminus.push(measure_cost/measure_savings_errorminus)
+                }
+                
+            }
+            var trace = {
+                x: measure_payback_x,
+                y: measure_payback_y,
+                // name: year_range,
+                error_x: {
+                    type: 'data',
+                    symmetric: false,
+                    array: measure_payback_error,
+                    arrayminus: measure_payback_errorminus,
+                    visible: true,
+                    color: 'black'
+                },
+                type: 'bar',
+                orientation: 'h'
+                // boxpoints: 'suspectedoutliers'
+            }
+            var measure_payback_layout = {
+                title: "Measure Payback",
+                xaxis: {
+                    title: 'Annual Payback in Years, Median and Middle 50%',
+                    rangemode: 'tozero',
+                    autorange: true,
+                    autorangeoptions: {
+                        clipmax: 30,
+                        clipmin: 0
+                    }
+                },
+                yaxis: {
+                    showticklabels: true,
+                    // tickangle: 45,
+                    automargin: true
+                }
+            }
+            measure_payback_plot = document.getElementById('measure-payback-plot')
+            Plotly.newPlot(measure_payback_plot, [trace], measure_payback_layout)
 
-                // measure_name = document.createElement('div')
-                // measure_name.setAttribute("class", "measure-name")
-                // measure_name.innerHTML = data[measure_id]['name']
-                // measure_results.appendChild(measure_name)
-
-                // measure_desc = document.createElement('div')
-                // measure_desc.setAttribute("class", "measure-desc")
-                // measure_desc.innerHTML = data[measure_id]['description']
-                // measure_results.appendChild(measure_desc)
-
-                // elec_wrapper = document.createElement('div')
-                // elec_wrapper.setAttribute("class", "elec_wrapper")
-                // measure_results.appendChild(elec_wrapper)
-
-                // elec_title = document.createElement('div')
-                // elec_title.setAttribute("class", "elec-title")
-                // elec_title.innerHTML = 'Median Electric Savings:'
-                // elec_wrapper.appendChild(elec_title)
-
-                // elec_value = document.createElement('div')
-                // elec_value.setAttribute("class", "elec-value")
-                // elec_value.innerHTML = quantile(data[measure_id]['other_fuel'], .50).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
-                // elec_wrapper.appendChild(elec_value)
-
-                // fuel_wrapper = document.createElement('div')
-                // fuel_wrapper.setAttribute("class", "fuel_wrapper")
-                // measure_results.appendChild(fuel_wrapper)
-
-                // fuel_title = document.createElement('div')
-                // fuel_title.setAttribute("class", "fuel-title")
-                // fuel_title.innerHTML = 'Median Other Fuel Savings:'
-                // fuel_wrapper.appendChild(fuel_title)
-
-                // fuel_value = document.createElement('div')
-                // fuel_value.setAttribute("class", "fuel-value")
-                // fuel_value.innerHTML = quantile(data[measure_id]['electricity'], .50).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
-                // fuel_wrapper.appendChild(fuel_value)            
-            // }
-            // document.getElementById('25th Percentile').innerHTML = "First Quartile: " + quantile(data, .25).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
-            // document.getElementById('Median').innerHTML = "Median: " + quantile(data, .50).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
-            // document.getElementById('75th Percentile').innerHTML = "75th Percentile: " + quantile(data, .75).toLocaleString("en-US", {maximumFractionDigits:0}) + " kWh"
         })
         .catch(error => {
-            document.getElementById('baseline-wrapper').innerHTML = "There was an error fetching the data. Try specifying different inputs - there are still bugs (I know there is a bug when selecting heating system as mini-splits)"
+            document.getElementById('baseline-wrapper').innerHTML = "There was an error fetching the data."
             console.error('There was a problem with the fetch operation:', error);
         });
     }

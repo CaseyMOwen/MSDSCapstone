@@ -1,0 +1,72 @@
+{
+    "1": {
+        "applicability": 1.0,
+        "code": "2022_1_1",
+        "description": "Attic floor insulation, general air sealing, duct sealing, and drill-and-fill insulation into uninsulated wood walls",
+        "name": "Basic Enclosure Package",
+        "default_cost": 1000
+    },
+    "2": {
+        "applicability": 1.0,
+        "code": "2022_1_2",
+        "description": "Measure 1 + interior insulation to foundation walls, conditioned basements and crawlspaces, insulate finished attics",
+        "name": "Enhanced Enclosure Package",
+        "default_cost": 3000
+    },
+    "3": {
+        "applicability": 1.0,
+        "code": "2022_1_4",
+        "description": "Install high efficiency heat pump for heating",
+        "name": "Heat Pumps, High-Efficiency, Electric Backup",
+        "default_cost": 7000
+    },
+    "4": {
+        "applicability": 1.0,
+        "code": "2022_1_6",
+        "description": "Replace water heater with heat pump water heater",
+        "name": "Heat Pump Water Heaters",
+        "default_cost": 3000
+    },
+    "5": {
+        "applicability": 1.0,
+        "code": "2022_1_8",
+        "description": "Convert all non-electric equipment to high efficiency electric - heat pump, heat pump water heater, heat pump dryer, electric range",
+        "name": "Whole-Home Electrification, High Efficiency",
+        "default_cost": 12000
+    },
+    "6": {
+        "applicability": 1.0,
+        "code": "2022_1_10",
+        "description": "Measures 2 and 5",
+        "name": "Whole-Home Electrification, High Efficiency + Enhanced Enclosure Package",
+        "default_cost": 15000
+    },
+    "7": {
+        "applicability": 1.0,
+        "code": "2024_1_2_02",
+        "description": "Replace existing windows with ENERGY STAR windows for any less-efficient windows.",
+        "name": "Windows, ENERGY STAR",
+        "default_cost": 5000
+    },
+    "8": {
+        "applicability": 0.68,
+        "code": "2024_1_3_07",
+        "description": "Replaces existing incandescent or CFL lighting with LED lighting",
+        "name": "Lighting, Universal LEDs",
+        "default_cost": 100
+    },
+    "9": {
+        "applicability": 0.32,
+        "code": "2024_1_4_05",
+        "description": "Replace existing natural gas furnace with high-efficiency natural gas furnace",
+        "name": "Replace Natural Gas Furnace with 96% Efficiency",
+        "default_cost": 5000
+    },
+    "10": {
+        "applicability": 0.08,
+        "code": "2024_1_4_08",
+        "description": "Replace existing natural gas boiler with high-efficiency natural gas boiler",
+        "name": "Replace Natural Gas Boiler with 96% Efficiency",
+        "default_cost": 5000
+    }
+}

@@ -1,3 +1,117 @@
+* {
+	box-sizing: border-box;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 16px;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+html {
+	height: 100%;
+	width: 'device-width';
+}
+
+body {
+	position: relative;
+	min-height: 100%;
+	color: #E0E0E0;
+	background-color: #1C1C1C;
+	margin: 0;
+	padding-bottom: 100px;
+}
+
+h1, h2, h3, h4, h5 {
+	color: #f1e9df;
+}
+
+h1 {
+    font-size: 30px;
+    text-align: center;
+}
+
+.content-wrapper {
+	min-width: 1050px;
+	margin: 0 auto;
+    width: 70%;
+}
+
+header {
+	color:  #00A000;
+	background-color: #2A2A2A;
+	border-bottom: 1px solid #555555;
+}
+
+header .content-wrapper {
+    display: flex;
+    justify-content: flex-start;
+}
+
+header h1 {
+    display: flex;
+	flex-grow: 1;
+	flex-basis: 0;
+	font-size: 20px;
+	margin: 0;
+	padding: 24px 0;
+    justify-content: center;
+}
+
+.fa-leaf {
+    color:  #00A000
+}
+
+
+header h1 a {
+	text-decoration: none;
+	color:  #f1e9df;
+	font-size: 20px;
+	margin: 0;
+}
+
+header nav {
+	display: flex;
+	flex-grow: 1;
+	flex-basis: 0;
+	justify-content: center;
+	align-items: center;
+}
+
+header nav a {
+	text-decoration: none;
+	color:  #f1e9df;
+	padding: 10px 10px;
+	margin: 0 10px;
+}
+
+header nav a:hover {
+    color: #008000;
+	border-bottom: 1px solid #008000;
+}
+
+#map_wrapper {
+    background-color: #555555;
+}
+
+/* Dropdown container */
+#state-select {
+    background-color: #2A2A2A; /* Header Background */
+    color: #E0E0E0; /* Primary Text */
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Dropdown options */
+#state-select option {
+    background-color: #1C1C1C; /* Background */
+    color: #E0E0E0; /* Primary Text */
+    padding: 10px;
+    border: none;
+}
+
+
 .feature-description{
     display: inline;
     margin: 5px
@@ -41,7 +155,7 @@
     
 }
 
-.category-header, #year-range-header {
+.category-header, #year-range-header, #costs-header{
     font-weight: bold;
     font-size: 20px;
     
@@ -108,4 +222,111 @@
 
 .measure-plot{
     width: 1500px
+}
+
+footer {
+    color:  #A0A0A0;
+	background-color: #2A2A2A;
+	position: absolute;
+	bottom: 0;
+	border-top: 1px solid #555555;
+	padding: 20px 0;
+	width: 100%;
+}
+
+footer a {
+	text-decoration: none;
+	color:  #f1e9df!important;
+	float: right;
+}
+
+footer a:hover {
+	border-bottom: 1px solid #999999;
+}
+
+footer p {
+    margin: 0;
+}
+
+.feature-accordion-button {
+    background-color: #1C1C1C; /* Background */
+    color: #E0E0E0; /* Primary Text */
+    cursor: pointer;
+    padding: 18px 0px;
+    width: 80%;
+    border: none;
+    text-align: left;
+    outline: none;
+    transition: background-color 0.4s ease;
+}
+
+.feature-accordion-button:hover {
+    background-color: #2A2A2A; /* Charcoal Gray */
+}
+
+.feature-panel {
+    /* padding: 0 18px; */
+    /* background-color: #2A2A2A; Charcoal Gray */
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    /* color: #B0B0B0; Secondary Text */
+}
+
+.arrow {
+    transition: transform 0.2s ease;
+} 
+
+.feature-accordion-button.active .arrow {
+    transform: rotate(90deg);
+}
+
+.step-headings {
+    text-align: left;
+}
+
+.costs-accordion {
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    border: 1px solid #555555
+}
+
+.costs-accordion-button {
+    background-color: #1C1C1C; /* Background */
+    color: #E0E0E0; /* Primary Text */
+    cursor: pointer;
+    padding: 18px 0px;
+    width: 80%;
+    border: none;
+    text-align: left;
+    outline: none;
+    transition: background-color 0.4s ease;
+}
+
+.costs-accordion-button:hover {
+    background-color: #2A2A2A; /* Charcoal Gray */
+}
+
+.costs-panel {
+    padding: 0 18px;
+    background-color: #2A2A2A; /* Charcoal Gray */
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    color: #B0B0B0; /* Secondary Text */
+}
+
+.arrow {
+    transition: transform 0.2s ease;
+} 
+
+.costs-accordion-button.active .arrow {
+    transform: rotate(90deg);
+}
+
+#cost-inputs-container {
+    width:1500px;
+    display: grid;
+    grid-template-columns: 500px 500px 500px;
 }

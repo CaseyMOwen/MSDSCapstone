@@ -3,21 +3,35 @@
     <head>
         <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
         <title>Home Energy</title>
-        <link href="styles/styles.css" rel="stylesheet" type="text/css">
+        <link href="/docs/styles/styles.css" rel="stylesheet" type="text/css">
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
         <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
         <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
 
         
     </head>
-    
     <script>
         // import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
     </script>
     <body>
+        <header>
+            <div class="content-wrapper">
+                <h1>
+                    <a href="/docs/">
+                        <i class="fas fa-solid fa-leaf"></i> Home Energy Predictor
+                    </a>
+                </h1>
+                <nav>
+                    <a href="/docs/">Home</a>
+                    <a href="/docs/faqs/">FAQs</a>
+                </nav>
+            </div>
+        </header>
         
         <div id="content">   
-            <h1>Home Energy Calculator</h1>
+            <!-- <h1>Home Energy Calculator</h1> -->
+        <h1 class="step-headings">Step 1: Select The Location of the Home</h1>
         <div id="countySelectContainer">
             <!-- Dropdown pairs will be appended here -->
             <!-- <div id="map-loading">Map is Loading...</div> -->
@@ -31,6 +45,8 @@
             
 
         </script>
+        <h1 class="step-headings">Step 2: Enter Features of the Home</h1>
+
         <div id="introduction"></br>After selecting the geographic region, please enter any additional features of the home in the selections below. No information is required, however the more you enter, the more refined the calculations will be. Entering the heating fuel and floor area are recommended at a minimum, since they are two of the most important factors in energy use. </div>
         <div id="feature-container">
             <!-- Feature Radio Buttons will be appended here -->
@@ -38,6 +54,11 @@
         <div id="year-range-header">Time Period Selection</div>
         <div id="year-range-description">What time period would you like the home's potential measure savings calculated for? This affects what weather is assumed, which has been calculated for each year range based on climate models in order to include the affects of global warming.</div>
         <div id="yearRangeButtons"></div>
+        <div id="costs-container">
+            <button id="costs-header" class="costs-accordion-button"><i class="fas fa-solid fa-angle-right arrow"></i> Costs</button>
+            <div id="cost-inputs-container" class="costs-panel">
+            </div>
+        </div>
     </br></br>
     <button id="postButton">Get Savings</button>
         <script src="api.js"></script>
@@ -52,7 +73,8 @@
         <div class = "baseline-plot" id="fuel-baseline-plot"></div>
         <div class = "measure-plot" id="elec-measure-plot"></div>
         <div class = "measure-plot" id="fuel-measure-plot"></div>
-        <div class = "measure-cost-plot" id="measure-cost-plot"></div>
+        <div class = "measure-savings-plot" id="measure-savings-plot"></div>
+        <div class = "measure-payback-plot" id="measure-payback-plot"></div>
         <!-- <div id="25th Percentile"></div>
         <div id="Median"></div>
         <div id="75th Percentile"></div> -->
@@ -136,7 +158,7 @@
                 // ele.style.setProperty('vertical-align', 'middle');
                 wrapper.style.setProperty('border', '1px solid black');
                 ele.style.setProperty('margin-top', '200px');
-                ele.style.setProperty('font-size', '20px')
+                ele.style.setProperty('font-size', '30px')
             }
             document.getElementById("region-hidden").style.display = 'none';
 
@@ -234,6 +256,59 @@
             })
         }
 
+        function createCostsInput() {
+            fetch('measures.json')
+            .then((response) => response.json())
+            .then((measures) => {
+            const inputs_container = document.getElementById('cost-inputs-container')
+                for (const i in measures) {
+                    measure_name = measures[i]['name']
+                    measure_code = measures[i]['code']
+                    cost_container = document.createElement("div");
+                    cost_container.setAttribute("class", "measure-cost-container")
+                    cost_container.setAttribute("id", measure_code + "-question-container")
+                    inputs_container.appendChild(cost_container)
+                    // question_info = category_info[question_name]
+                    question_header = document.createElement("div");
+                    question_header.innerHTML = measure_name
+                    question_header.setAttribute("class", "question-header")
+                    question_header.setAttribute("id", measure_code + "-question-header")
+                    cost_container.appendChild(question_header)
+                    field_container = document.createElement("div");
+                    field_container.setAttribute("class", "field-container")
+                    field_container.setAttribute("id", measure_code + "-field-container")
+                    cost_container.appendChild(field_container)
+                    // Make text input field
+                    field_container.setAttribute("class", "textbox-container")
+                    field = document.createElement('input');
+                    field.className = 'measure-cost'
+                    units = document.createElement('div')
+                    field.name=measure_name
+                    field.id = measure_code + "-cost"
+                    field.value = measure_name = measures[i]['default_cost']
+                    units.innerHTML = '$'
+                    field_container.appendChild(field);
+                    field_container.appendChild(units);
+                    // featurevalueInput.className = 'feature-value'
+                    // featurevalueSelect.replaceWith(featurevalueInput)
+                    // description.innerHTML = feat_json[selectedFeature]['field_description']
+    
+                }
+                document.querySelectorAll('.costs-accordion-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const panel = button.nextElementSibling;
+                        button.classList.toggle('active');
+                        if (panel.style.maxHeight) {
+                            panel.style.maxHeight = null;
+                        } else {
+                            panel.style.maxHeight = panel.scrollHeight + 'px';
+                        }
+                    });
+                });
+
+            })
+        }
+
         function toClassCase(str) {
             str = str = str.replace(/\s+/g, '-').toLowerCase();
             return str
@@ -251,13 +326,15 @@
                     cat_container.setAttribute("class", "category-container")
                     cat_container.setAttribute("id", toClassCase(cat_name) + "-container")
                     feature_container.appendChild(cat_container)
-                    cat_header = document.createElement("div");
-                    cat_header.innerHTML = cat_name
-                    cat_header.setAttribute("class", "category-header")
+                    cat_header = document.createElement("button");
+                    cat_header.innerHTML = '<i class="fas fa-solid fa-angle-right arrow"></i> ' + cat_name
+                    // cat_header.setAttribute("class", "category-header")
+                    cat_header.setAttribute("class", "category-header feature-accordion-button")
                     cat_header.setAttribute("id", toClassCase(cat_name) + "-header")
                     cat_container.appendChild(cat_header)
                     questions_container = document.createElement("div");
-                    questions_container.setAttribute("class", "questions-container")
+                    // questions_container.setAttribute("class", "questions-container")
+                    questions_container.setAttribute("class", "questions-container feature-panel")
                     questions_container.setAttribute("id", toClassCase(cat_name) + "-questions-container")
                     cat_container.appendChild(questions_container)
                     for (const question_name in category_info) {
@@ -325,10 +402,19 @@
                         }
                     }
 
-
-
+                
                 }
-            
+                document.querySelectorAll('.feature-accordion-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const panel = button.nextElementSibling;
+                    button.classList.toggle('active');
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + 'px';
+                    }
+                });
+            });            
             })
         }
         
@@ -438,11 +524,13 @@
 
             createStateSelector();
             createFeaturesInput();
+            createCostsInput();
             // Initial dropdown pair
             // createDropdownPair();
 
             // Add new dropdown pair when button is clicked
             // addDropdownButton.addEventListener('click', createDropdownPair);
+
 
             function getFeatureDict() {
                 // county = document.getElementById('county-select').value
@@ -487,12 +575,20 @@
             }
     
         </script>        
-        
+        <script src="/docs/script.js"></script>
+
         
 
     </div>
 
+    
+    <footer>
+        <div class="content-wrapper">
+            <p>&copy; 2024
+            <a href="mailto:casey.owen@tufts.edu"><i class="fas fa-address-book"></i> Contact</a>
+            </p>
+        </div>
+    </footer>
     </body>
-
 
     
