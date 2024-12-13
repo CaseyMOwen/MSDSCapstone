@@ -330,3 +330,17 @@ footer p {
     display: grid;
     grid-template-columns: 500px 500px 500px;
 }
+
+#plots-container {
+    width:1500px;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 50px;
+    margin-top: 50px;
+}
+
+
+.plot {
+    /* margin: 10px; */
+    width: 750px;
+}
