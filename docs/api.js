@@ -3,7 +3,7 @@
 document.getElementById('postButton').addEventListener('click', () => {
     featdict = getFeatureDict()
     if (featdict != false) {
-        document.getElementById('baseline-wrapper').innerHTML = "Loading... Approximate wait time 30s."
+        document.getElementById('baseline-wrapper').innerHTML = "<br/>Loading... Approximate wait time 30s.<br/>"
         getSavings(featdict)
         .then(data => {
             document.getElementById('baseline-wrapper').innerHTML = ""
@@ -439,7 +439,7 @@ document.getElementById('postButton').addEventListener('click', () => {
 
         })
         .catch(error => {
-            document.getElementById('baseline-wrapper').innerHTML = "There was an error fetching the data."
+            document.getElementById('baseline-wrapper').innerHTML = "<br/>There was an error fetching the data.<br/>"
             console.error('There was a problem with the fetch operation:', error);
         });
     }

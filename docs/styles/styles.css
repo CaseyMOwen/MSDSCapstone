@@ -132,7 +132,7 @@ header nav a:hover {
     margin-top: 20px;
 }
 
-#year-range-description {
+#year-range-description, #introduction, #costs-description, #chart-description {
     max-width: 1000px;
 }
 
@@ -200,6 +200,31 @@ header nav a:hover {
 #postButton {
     font-size: x-large;
 }
+
+#postButton {
+    /* width: 75px; */
+    font-size: 30px;
+    height: 45px;
+    background-color: transparent;
+    border: 2px solid #E0E0E0;
+    border-radius: 1px;
+    color:#E0E0E0; 
+    box-sizing: border-box;
+    /* transition: 0.3s; */
+    box-shadow: 1px 1px;
+    margin-top: 25px;
+    background-size: 200% 100%;
+    background-image: linear-gradient(to right, transparent 50%, #E0E0E0 50%);
+    transition: 1s;
+}
+
+#postButton:hover {
+    /* background-color: #fdcc5b; */
+    border: 2px solid #E0E0E0;
+    color: black;
+    box-shadow: 1px 1px black;
+    background-position: -100% 0%;
+} 
 
 .measures-wrapper {
     width:1500px;
